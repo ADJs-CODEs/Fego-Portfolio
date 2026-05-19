@@ -1,15 +1,34 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-function ChibiDoll({ containerRef }) {
+function useBreakpoint() {
+  const get = () => {
+    const w = window.innerWidth;
+    if (w < 640) return "mobile";
+    if (w < 1024) return "tablet";
+    return "desktop";
+  };
+  const [bp, setBp] = useState(get);
+  useEffect(() => {
+    const fn = () => setBp(get());
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
+  }, []);
+  return bp;
+}
+
+function ChibiDoll({ bp }) {
   const canvasRef = useRef(null);
+
+  const cfg = {
+    mobile: { cw: 160, ch: 260, right: "-10px", bottom: "0px", opacity: 0.78 },
+    tablet: { cw: 230, ch: 370, right: "0px", bottom: "0px", opacity: 1 },
+    desktop: { cw: 340, ch: 520, right: "0px", bottom: "0px", opacity: 1 },
+  }[bp];
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
-    const w = canvas.offsetWidth;
-    const h = canvas.offsetHeight;
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -17,10 +36,10 @@ function ChibiDoll({ containerRef }) {
       alpha: true,
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(w, h, false);
+    renderer.setSize(cfg.cw, cfg.ch, false);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 50);
+    const camera = new THREE.PerspectiveCamera(42, cfg.cw / cfg.ch, 0.1, 50);
     camera.position.set(0, 0, 9);
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
@@ -34,7 +53,6 @@ function ChibiDoll({ containerRef }) {
     d3.position.set(0, 0, 6);
     scene.add(d3);
 
-    /* ── materials ── */
     const gold = new THREE.MeshStandardMaterial({
       color: 0xe8c84a,
       metalness: 0.9,
@@ -49,15 +67,14 @@ function ChibiDoll({ containerRef }) {
       color: 0x1a0f05,
       roughness: 0.8,
     });
-    /* outfit: soft lilac dress with white accents */
     const dress = new THREE.MeshStandardMaterial({
       color: 0xc8a8e8,
       roughness: 0.55,
-    }); /* lilac */
+    });
     const dressD = new THREE.MeshStandardMaterial({
       color: 0xb090d8,
       roughness: 0.55,
-    }); /* darker lilac ruffle */
+    });
     const white = new THREE.MeshStandardMaterial({
       color: 0xffffff,
       roughness: 0.45,
@@ -75,7 +92,7 @@ function ChibiDoll({ containerRef }) {
     const shoe = new THREE.MeshStandardMaterial({
       color: 0xc87090,
       roughness: 0.6,
-    }); /* pink mary janes */
+    });
     const sock = new THREE.MeshStandardMaterial({
       color: 0xfff0f5,
       roughness: 0.5,
@@ -83,7 +100,7 @@ function ChibiDoll({ containerRef }) {
     const bow = new THREE.MeshStandardMaterial({
       color: 0xff8fb0,
       roughness: 0.5,
-    }); /* pink bow */
+    });
     const pupil = new THREE.MeshStandardMaterial({
       color: 0x2a1505,
       roughness: 0.4,
@@ -95,7 +112,7 @@ function ChibiDoll({ containerRef }) {
 
     const assembly = new THREE.Group();
 
-    /* ── CHAIN ── */
+    /* chain */
     const chainGroup = new THREE.Group();
     const topRing = new THREE.Mesh(
       new THREE.TorusGeometry(0.16, 0.04, 12, 32),
@@ -103,9 +120,8 @@ function ChibiDoll({ containerRef }) {
     );
     topRing.position.y = 0;
     chainGroup.add(topRing);
-
-    const LINKS = 5;
-    const LINK_GAP = 0.38;
+    const LINKS = 5,
+      LINK_GAP = 0.38;
     for (let i = 0; i < LINKS; i++) {
       const lk = new THREE.Mesh(
         new THREE.TorusGeometry(0.1, 0.032, 10, 24),
@@ -118,26 +134,34 @@ function ChibiDoll({ containerRef }) {
     chainGroup.position.y = 2.7;
     assembly.add(chainGroup);
 
-    /* ── DOLL ── */
+    /* doll */
     const doll = new THREE.Group();
     doll.position.y = 2.7 - (LINKS + 1) * LINK_GAP - 0.1;
 
-    /* connector ring to chain */
-    const conn = new THREE.Mesh(
-      new THREE.TorusGeometry(0.1, 0.032, 10, 24),
-      gold,
+    const add = (geo, mat, px = 0, py = 0, pz = 0, rx, ry, rz, sx, sy, sz) => {
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(px, py, pz);
+      if (rx !== undefined) m.rotation.set(rx, ry || 0, rz || 0);
+      if (sx !== undefined) m.scale.set(sx, sy ?? sx, sz ?? sx);
+      doll.add(m);
+      return m;
+    };
+
+    add(new THREE.TorusGeometry(0.1, 0.032, 10, 24), gold, 0, 1.05);
+    add(
+      new THREE.SphereGeometry(0.52, 24, 18),
+      skin,
+      0,
+      0.72,
+      0,
+      0,
+      0,
+      0,
+      1,
+      1.05,
+      1,
     );
-    conn.position.y = 1.05;
-    doll.add(conn);
-
-    /* head */
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.52, 24, 18), skin);
-    head.position.y = 0.72;
-    head.scale.set(1, 1.05, 1);
-    doll.add(head);
-
-    /* hair cap */
-    const hairCap = new THREE.Mesh(
+    add(
       new THREE.SphereGeometry(
         0.545,
         18,
@@ -148,272 +172,251 @@ function ChibiDoll({ containerRef }) {
         Math.PI * 0.52,
       ),
       hair,
+      0,
+      0.86,
     );
-    hairCap.position.y = 0.86;
-    doll.add(hairCap);
-
-    /* side hair */
-    [-1, 1].forEach((s) => {
-      const hf = new THREE.Mesh(
+    [-1, 1].forEach((s) =>
+      add(
         new THREE.CylinderGeometry(0.13, 0.08, 0.38, 10),
         hair,
+        s * 0.45,
+        0.6,
+      ),
+    );
+    [-1, 1].forEach((s) => {
+      add(new THREE.SphereGeometry(0.19, 14, 12), hair, s * 0.48, 1.06);
+      add(
+        new THREE.SphereGeometry(0.09, 8, 6),
+        bow,
+        s * 0.48 - 0.08,
+        1.18,
+        0.06,
+        0,
+        0,
+        0,
+        1.4,
+        0.7,
+        0.5,
       );
-      hf.position.set(s * 0.45, 0.6, 0);
-      doll.add(hf);
-    });
-
-    /* twin buns */
-    [-1, 1].forEach((s) => {
-      const bun = new THREE.Mesh(new THREE.SphereGeometry(0.19, 14, 12), hair);
-      bun.position.set(s * 0.48, 1.06, 0);
-      doll.add(bun);
-      /* bow on each bun */
-      const bowL = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), bow);
-      bowL.position.set(s * 0.48 - 0.08, 1.18, 0.06);
-      bowL.scale.set(1.4, 0.7, 0.5);
-      doll.add(bowL);
-      const bowR = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), bow);
-      bowR.position.set(s * 0.48 + 0.08, 1.18, 0.06);
-      bowR.scale.set(1.4, 0.7, 0.5);
-      doll.add(bowR);
-      const bowC = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), white);
-      bowC.position.set(s * 0.48, 1.18, 0.09);
-      doll.add(bowC);
-    });
-
-    /* eyes */
-    [-1, 1].forEach((s) => {
-      const ew = new THREE.Mesh(new THREE.CircleGeometry(0.11, 16), white);
-      ew.position.set(s * 0.18, 0.69, 0.51);
-      doll.add(ew);
-      const ep = new THREE.Mesh(new THREE.CircleGeometry(0.075, 14), pupil);
-      ep.position.set(s * 0.18, 0.69, 0.515);
-      doll.add(ep);
-      const es = new THREE.Mesh(new THREE.CircleGeometry(0.03, 10), shine);
-      es.position.set(s * 0.18 + 0.04, 0.72, 0.52);
-      doll.add(es);
-      /* lash */
-      const lash = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22, 0.03, 0.01),
-        hair,
+      add(
+        new THREE.SphereGeometry(0.09, 8, 6),
+        bow,
+        s * 0.48 + 0.08,
+        1.18,
+        0.06,
+        0,
+        0,
+        0,
+        1.4,
+        0.7,
+        0.5,
       );
-      lash.position.set(s * 0.18, 0.79, 0.51);
-      doll.add(lash);
+      add(new THREE.SphereGeometry(0.055, 8, 6), white, s * 0.48, 1.18, 0.09);
     });
-
-    /* blush */
     [-1, 1].forEach((s) => {
-      const bl = new THREE.Mesh(new THREE.CircleGeometry(0.1, 14), blush);
-      bl.position.set(s * 0.32, 0.6, 0.51);
-      doll.add(bl);
+      add(new THREE.CircleGeometry(0.11, 16), white, s * 0.18, 0.69, 0.51);
+      add(new THREE.CircleGeometry(0.075, 14), pupil, s * 0.18, 0.69, 0.515);
+      add(
+        new THREE.CircleGeometry(0.03, 10),
+        shine,
+        s * 0.18 + 0.04,
+        0.72,
+        0.52,
+      );
+      add(new THREE.BoxGeometry(0.22, 0.03, 0.01), hair, s * 0.18, 0.79, 0.51);
     });
+    [-1, 1].forEach((s) =>
+      add(new THREE.CircleGeometry(0.1, 14), blush, s * 0.32, 0.6, 0.51),
+    );
 
-    /* smile */
-    const smileGeo = new THREE.TorusGeometry(0.09, 0.015, 6, 16, Math.PI);
-    const smileMesh = new THREE.Mesh(
-      smileGeo,
+    const sm = new THREE.Mesh(
+      new THREE.TorusGeometry(0.09, 0.015, 6, 16, Math.PI),
       new THREE.MeshStandardMaterial({ color: 0xc07060, roughness: 0.6 }),
     );
-    smileMesh.position.set(0, 0.57, 0.515);
-    smileMesh.rotation.z = Math.PI;
-    doll.add(smileMesh);
+    sm.position.set(0, 0.57, 0.515);
+    sm.rotation.z = Math.PI;
+    doll.add(sm);
 
-    /* nose */
-    const noseMesh = new THREE.Mesh(
+    add(
       new THREE.SphereGeometry(0.025, 8, 6),
       new THREE.MeshStandardMaterial({ color: 0xe0a888, roughness: 0.7 }),
+      0,
+      0.64,
+      0.53,
     );
-    noseMesh.position.set(0, 0.64, 0.53);
-    doll.add(noseMesh);
-
-    /* neck */
-    const neck = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.14, 0.16, 0.18, 14),
-      skin,
-    );
-    neck.position.y = 0.27;
-    doll.add(neck);
-
-    /* collar ruffle – white lace ring */
-    const collar = new THREE.Mesh(
+    add(new THREE.CylinderGeometry(0.14, 0.16, 0.18, 14), skin, 0, 0.27);
+    add(
       new THREE.TorusGeometry(0.22, 0.07, 10, 24),
       white,
+      0,
+      0.2,
+      0,
+      Math.PI * 0.5,
     );
-    collar.position.y = 0.2;
-    collar.rotation.x = Math.PI * 0.5;
-    doll.add(collar);
-
-    /* body – puffed lilac dress */
-    const bodyTop = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.24, 0.3, 0.38, 18),
-      dress,
+    add(new THREE.CylinderGeometry(0.24, 0.3, 0.38, 18), dress, 0, 0.01);
+    add(new THREE.CylinderGeometry(0.38, 0.52, 0.36, 22), dress, 0, -0.28);
+    add(new THREE.CylinderGeometry(0.53, 0.57, 0.09, 22), dressD, 0, -0.45);
+    add(new THREE.CylinderGeometry(0.5, 0.54, 0.07, 22), white, 0, -0.52);
+    add(
+      new THREE.SphereGeometry(0.07, 8, 6),
+      bow,
+      -0.07,
+      0.17,
+      0.27,
+      0,
+      0,
+      0,
+      1.5,
+      0.7,
+      0.5,
     );
-    bodyTop.position.y = 0.01;
-    doll.add(bodyTop);
-
-    /* skirt – wider flared cone */
-    const skirt = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.38, 0.52, 0.36, 22),
-      dress,
+    add(
+      new THREE.SphereGeometry(0.07, 8, 6),
+      bow,
+      0.07,
+      0.17,
+      0.27,
+      0,
+      0,
+      0,
+      1.5,
+      0.7,
+      0.5,
     );
-    skirt.position.y = -0.28;
-    doll.add(skirt);
-
-    /* ruffle at skirt hem */
-    const ruffle1 = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.53, 0.57, 0.09, 22),
-      dressD,
-    );
-    ruffle1.position.y = -0.45;
-    doll.add(ruffle1);
-
-    /* white petticoat peek */
-    const petticoat = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.5, 0.54, 0.07, 22),
-      white,
-    );
-    petticoat.position.y = -0.52;
-    doll.add(petticoat);
-
-    /* bow on chest */
-    const chestBowL = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bow);
-    chestBowL.position.set(-0.07, 0.17, 0.27);
-    chestBowL.scale.set(1.5, 0.7, 0.5);
-    doll.add(chestBowL);
-    const chestBowR = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), bow);
-    chestBowR.position.set(0.07, 0.17, 0.27);
-    chestBowR.scale.set(1.5, 0.7, 0.5);
-    doll.add(chestBowR);
-    const chestBowC = new THREE.Mesh(
-      new THREE.SphereGeometry(0.045, 8, 6),
-      white,
-    );
-    chestBowC.position.set(0, 0.17, 0.29);
-    doll.add(chestBowC);
-
-    /* arms – puffed sleeves */
+    add(new THREE.SphereGeometry(0.045, 8, 6), white, 0, 0.17, 0.29);
     [-1, 1].forEach((s) => {
-      /* puff sleeve ball */
-      const sleeve = new THREE.Mesh(
+      add(
         new THREE.SphereGeometry(0.13, 12, 10),
         dress,
+        s * 0.36,
+        0.15,
+        0.08,
+        0,
+        0,
+        0,
+        1,
+        0.85,
+        0.85,
       );
-      sleeve.position.set(s * 0.36, 0.15, 0.08);
-      sleeve.scale.set(1, 0.85, 0.85);
-      doll.add(sleeve);
-      /* arm */
-      const arm = new THREE.Mesh(
+      add(
         new THREE.CylinderGeometry(0.075, 0.065, 0.34, 10),
         dress,
+        s * 0.32,
+        0.04,
+        0.16,
+        -0.48,
+        0,
+        s * 0.65,
       );
-      arm.position.set(s * 0.32, 0.04, 0.16);
-      arm.rotation.z = s * 0.65;
-      arm.rotation.x = -0.48;
-      doll.add(arm);
-      /* hand */
-      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.085, 10, 8), skin);
-      hand.position.set(s * 0.13, 0.3, 0.35);
-      doll.add(hand);
+      add(new THREE.SphereGeometry(0.085, 10, 8), skin, s * 0.13, 0.3, 0.35);
     });
-
-    /* heart fingers */
-    const hl = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), rose);
-    hl.position.set(-0.07, 0.42, 0.38);
-    hl.scale.set(1, 1, 0.6);
-    doll.add(hl);
-    const hr = new THREE.Mesh(new THREE.SphereGeometry(0.08, 10, 8), rose);
-    hr.position.set(0.07, 0.42, 0.38);
-    hr.scale.set(1, 1, 0.6);
-    doll.add(hr);
-    const hv = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.14, 12), rose);
-    hv.position.set(0, 0.3, 0.37);
-    hv.rotation.z = Math.PI;
-    hv.scale.z = 0.6;
-    doll.add(hv);
-
-    /* legs */
+    add(
+      new THREE.SphereGeometry(0.08, 10, 8),
+      rose,
+      -0.07,
+      0.42,
+      0.38,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0.6,
+    );
+    add(
+      new THREE.SphereGeometry(0.08, 10, 8),
+      rose,
+      0.07,
+      0.42,
+      0.38,
+      0,
+      0,
+      0,
+      1,
+      1,
+      0.6,
+    );
+    add(
+      new THREE.ConeGeometry(0.11, 0.14, 12),
+      rose,
+      0,
+      0.3,
+      0.37,
+      Math.PI,
+      0,
+      0,
+      1,
+      1,
+      0.6,
+    );
     [-1, 1].forEach((s) => {
-      const leg = new THREE.Mesh(
+      add(
         new THREE.CylinderGeometry(0.1, 0.09, 0.32, 12),
         skin,
+        s * 0.12,
+        -0.74,
       );
-      leg.position.set(s * 0.12, -0.74, 0);
-      doll.add(leg);
-      /* lace sock */
-      const sockMesh = new THREE.Mesh(
+      add(
         new THREE.CylinderGeometry(0.106, 0.1, 0.14, 12),
         sock,
+        s * 0.12,
+        -0.88,
       );
-      sockMesh.position.set(s * 0.12, -0.88, 0);
-      doll.add(sockMesh);
-      /* pink mary jane shoe */
-      const shoeMesh = new THREE.Mesh(
+      add(
         new THREE.SphereGeometry(0.13, 12, 8),
         shoe,
+        s * 0.12,
+        -0.98,
+        0.06,
+        0,
+        0,
+        0,
+        1,
+        0.65,
+        1.4,
       );
-      shoeMesh.position.set(s * 0.12, -0.98, 0.06);
-      shoeMesh.scale.set(1, 0.65, 1.4);
-      doll.add(shoeMesh);
-      /* shoe strap */
-      const strap = new THREE.Mesh(
-        new THREE.BoxGeometry(0.24, 0.03, 0.04),
-        shoe,
-      );
-      strap.position.set(s * 0.12, -0.93, 0.1);
-      doll.add(strap);
+      add(new THREE.BoxGeometry(0.24, 0.03, 0.04), shoe, s * 0.12, -0.93, 0.1);
     });
 
     assembly.add(doll);
-    assembly.position.y = 11; /* start off screen */
+    assembly.position.y = 11;
     scene.add(assembly);
 
-    /* ── drop animation ── */
-    let progress = 0;
-    const START_DELAY = 600;
     let startTime = null;
-    const DROP_DUR = 2400;
-
     setTimeout(() => {
       startTime = performance.now();
-    }, START_DELAY);
-
+    }, 600);
     const easeOut = (t) => 1 - Math.pow(1 - t, 3);
 
     let animId;
     function animate(t) {
       animId = requestAnimationFrame(animate);
       const time = t * 0.001;
-
-      if (startTime !== null) {
-        progress = Math.min((performance.now() - startTime) / DROP_DUR, 1);
-      }
-
-      const ep = easeOut(progress);
-      assembly.position.y = (1 - ep) * 11;
+      let p = 0;
+      if (startTime !== null)
+        p = Math.min((performance.now() - startTime) / 2400, 1);
+      assembly.position.y = (1 - easeOut(p)) * 11;
       assembly.rotation.y = time * 0.55;
-      if (progress > 0.85) {
-        assembly.rotation.z = Math.sin(time * 1.6) * 0.04;
-      }
-
+      if (p > 0.85) assembly.rotation.z = Math.sin(time * 1.6) * 0.04;
       renderer.render(scene, camera);
     }
     animId = requestAnimationFrame(animate);
-
     return () => {
       cancelAnimationFrame(animId);
       renderer.dispose();
     };
-  }, []);
+  }, [cfg.cw, cfg.ch]);
 
   return (
     <canvas
       ref={canvasRef}
       style={{
         position: "absolute",
-        right: 0,
-        bottom: 0,
-        width: "340px",
-        height: "520px",
+        right: cfg.right,
+        bottom: cfg.bottom,
+        width: `${cfg.cw}px`,
+        height: `${cfg.ch}px`,
+        opacity: cfg.opacity,
         pointerEvents: "none",
       }}
     />
@@ -421,42 +424,92 @@ function ChibiDoll({ containerRef }) {
 }
 
 export default function IntroPage() {
+  const bp = useBreakpoint();
+  const isMobile = bp === "mobile";
+  const isTablet = bp === "tablet";
+
   return (
-    <section className="h-screen w-full snap-start flex flex-col justify-between p-8 md:p-16 relative z-10 overflow-hidden">
+    <section
+      className="h-screen w-full snap-start flex flex-col justify-between relative z-10 overflow-hidden"
+      style={{
+        padding: isMobile ? "24px 20px" : isTablet ? "28px 36px" : "32px 40px",
+      }}
+    >
       {/* top bar */}
-      <div className="flex justify-between items-center w-full font-mono text-xs tracking-widest text-neutral-500 relative z-20">
+      <div
+        className="flex justify-between items-center w-full font-mono tracking-widest text-neutral-500 relative z-20"
+        style={{ fontSize: isMobile ? "8px" : "10px" }}
+      >
         <div></div>
-        <div className="border border-neutral-800 px-3 py-1 rounded-full text-[10px] bg-neutral-900/30 backdrop-blur-sm text-neutral-400">
+        <div
+          className="border border-neutral-800 px-3 py-1 rounded-full bg-neutral-900/30 backdrop-blur-sm text-neutral-400"
+          style={{ fontSize: isMobile ? "7px" : "9px" }}
+        >
           PORTFOLIO '26
         </div>
       </div>
 
-      {/* centre text */}
-      <div className="relative z-20 text-center mx-auto">
-        <h1 className="text-6xl sm:text-7xl md:text-9xl font-black tracking-tighter uppercase select-none transition-all duration-700 hover:tracking-normal cursor-default drop-shadow-[0_0_50px_rgba(99,102,241,0.2)]">
+      {/* centre text — nudged left on mobile/tablet so doll doesn't cover it */}
+      <div
+        className="relative z-20 text-center mx-auto"
+        style={{ paddingRight: isMobile ? "80px" : isTablet ? "150px" : "0px" }}
+      >
+        <h1
+          className="font-black tracking-tighter uppercase select-none cursor-default"
+          style={{
+            fontSize: isMobile
+              ? "clamp(2.8rem,16vw,3.8rem)"
+              : isTablet
+                ? "clamp(4rem,12vw,6rem)"
+                : "clamp(5rem,10vw,8rem)",
+            lineHeight: 1,
+            color: "#fff",
+            textShadow: "0 0 50px rgba(99,102,241,0.2)",
+            letterSpacing: "-0.04em",
+          }}
+        >
           Portfolio.
         </h1>
-        <p className="text-neutral-400 mt-6 tracking-[0.2em] md:tracking-[0.4em] font-mono text-[10px] md:text-xs uppercase max-w-xl mx-auto leading-relaxed">
+        <p
+          className="text-neutral-400 font-mono uppercase leading-relaxed"
+          style={{
+            marginTop: isMobile ? "10px" : "18px",
+            fontSize: isMobile ? "7px" : isTablet ? "8px" : "10px",
+            letterSpacing: isMobile ? "0.15em" : "0.32em",
+          }}
+        >
           Virtual Assistant &amp; Operations Specialist
         </p>
       </div>
 
       {/* bottom bar */}
-      <div className="flex justify-between items-end text-[10px] md:text-xs font-mono text-neutral-500 w-full relative z-20">
+      <div
+        className="flex justify-between items-end font-mono text-neutral-500 w-full relative z-20"
+        style={{ fontSize: isMobile ? "7px" : "9px" }}
+      >
         <div className="space-y-1">
-          <div></div>
-          <div className="text-neutral-400"></div>
+          <div style={{ letterSpacing: "0.15em", color: "#333" }}>
+            [ CREATIVE DIRECTION ]
+          </div>
+          <div style={{ letterSpacing: "0.15em", color: "#444" }}></div>
         </div>
         <div className="flex flex-col items-center gap-2">
-          <span className="text-neutral-400 tracking-widest text-[9px] uppercase animate-pulse"></span>
-          <div className="w-[1px] h-8 bg-neutral-800 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1/2 bg-indigo-500 animate-[bounce_2s_infinite]" />
+          {!isMobile && (
+            <span
+              className="text-neutral-600 uppercase animate-pulse"
+              style={{ letterSpacing: "0.15em", fontSize: "8px" }}
+            >
+              Scroll to navigate
+            </span>
+          )}
+          <div className="w-[1px] h-6 bg-neutral-800 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-indigo-500 animate-bounce" />
           </div>
         </div>
       </div>
 
-      {/* chibi doll – absolutely positioned bottom-right */}
-      <ChibiDoll />
+      {/* chibi doll */}
+      <ChibiDoll bp={bp} />
     </section>
   );
 }

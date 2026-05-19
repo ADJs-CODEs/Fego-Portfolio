@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-function FontLoader() {
+function useIsMobile() {
+  const [mobile, setMobile] = React.useState(() => window.innerWidth < 768);
   React.useEffect(() => {
-    if (document.getElementById("pjs-font")) return;
-    const l = Object.assign(document.createElement("link"), {
-      id: "pjs-font",
-      rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap",
-    });
-    document.head.appendChild(l);
+    const fn = () => setMobile(window.innerWidth < 768);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
-  return null;
+  return mobile;
 }
 
-/* Tool badge colors */
 const TOOL_COLORS = {
   Notion: {
     bg: "rgba(255,255,255,0.08)",
@@ -71,11 +67,6 @@ const TOOL_COLORS = {
     color: "#FF4A00",
     border: "rgba(255,74,0,0.3)",
   },
-  "Notion ": {
-    bg: "rgba(255,255,255,0.08)",
-    color: "#e4e4e7",
-    border: "rgba(255,255,255,0.15)",
-  },
   Loom: {
     bg: "rgba(99,91,255,0.15)",
     color: "#635BFF",
@@ -112,9 +103,8 @@ const TOOL_COLORS = {
     border: "rgba(0,82,204,0.3)",
   },
 };
-
-const toolStyle = (name) =>
-  TOOL_COLORS[name] || {
+const toolStyle = (n) =>
+  TOOL_COLORS[n] || {
     bg: "rgba(255,255,255,0.05)",
     color: "#a1a1aa",
     border: "rgba(255,255,255,0.1)",
@@ -126,13 +116,12 @@ const projects = [
     number: "01",
     title: "Executive Operations Overhaul",
     tag: "Operations",
-    tagColor: "#6366f1",
     image:
-      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=70&fit=crop",
     summary:
       "Rebuilt workflow systems for a 12-person remote team, reducing task turnaround by 40%.",
     description:
-      "Led a full audit and redesign of the team's project management infrastructure. Migrated scattered communications from email threads into structured Notion workspaces and Asana task pipelines. Defined SOPs for weekly reporting, client onboarding, and async communication. The result was a 40% reduction in task turnaround time and a measurable decrease in missed deadlines.",
+      "Led a full audit and redesign of the team's project management infrastructure. Migrated scattered communications from email threads into structured Notion workspaces and Asana task pipelines. Defined SOPs for weekly reporting, client onboarding, and async communication.",
     tools: ["Notion", "Asana", "Slack", "Google Workspace"],
     outcome: "40% faster turnaround · 0 missed deadlines in Q4",
     link: "https://notion.so",
@@ -144,13 +133,12 @@ const projects = [
     number: "02",
     title: "C-Suite Calendar & Inbox",
     tag: "Admin",
-    tagColor: "#06b6d4",
     image:
-      "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=600&q=70&fit=crop",
     summary:
       "Managed an executive's calendar and inbox across 3 time zones with zero scheduling conflicts.",
     description:
-      "Took full ownership of a senior executive's Google Calendar and Gmail — triaging 200+ emails daily, scheduling cross-timezone meetings, setting up automated filters and labels, and drafting responses. Implemented a daily briefing system giving the executive a 5-minute morning digest of priorities. Inbox response time dropped from 48 hours to under 4.",
+      "Took full ownership of a senior executive's Google Calendar and Gmail — triaging 200+ emails daily, scheduling cross-timezone meetings, setting up automated filters and labels, and drafting responses.",
     tools: ["Gmail", "Calendly", "Google Calendar", "Notion"],
     outcome: "Zero scheduling conflicts · 4hr avg. response time",
     link: "https://calendar.google.com",
@@ -162,13 +150,12 @@ const projects = [
     number: "03",
     title: "Social Media Content Pipeline",
     tag: "Content",
-    tagColor: "#f59e0b",
     image:
-      "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=600&q=70&fit=crop",
     summary:
       "Built a 30-day content calendar pipeline that grew a brand from 1.2K to 8.4K followers.",
     description:
-      "Designed a repeatable monthly content system: ideation, drafting, scheduling, and performance review. Used Canva for visual templates, Notion for content calendars, and Hootsuite for batch scheduling. Tracked engagement metrics weekly and adjusted strategy based on insights. The account grew from 1.2K to 8.4K followers over 4 months.",
+      "Designed a repeatable monthly content system: ideation, drafting, scheduling, and performance review. Used Canva for visual templates, Notion for content calendars, and Hootsuite for batch scheduling.",
     tools: ["Canva", "Notion", "Hootsuite", "Instagram"],
     outcome: "1.2K → 8.4K followers · 4-month campaign",
     link: "https://hootsuite.com",
@@ -180,13 +167,12 @@ const projects = [
     number: "04",
     title: "Remote Hire Onboarding System",
     tag: "Process Design",
-    tagColor: "#10b981",
     image:
-      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=70&fit=crop",
     summary:
       "Designed a 30-60-90 day onboarding flow that cut new hire ramp-up from 8 to 4 weeks.",
     description:
-      "Created a comprehensive onboarding hub in Notion covering company culture docs, tool access guides, role-specific checklists, and milestone check-ins. Automated welcome emails and meeting invites via Zapier. Coordinated first-week schedules across departments and gathered feedback from new hires to iterate on the process.",
+      "Created a comprehensive onboarding hub in Notion covering company culture docs, tool access guides, role-specific checklists, and milestone check-ins. Automated welcome emails and meeting invites via Zapier.",
     tools: ["Notion", "Zapier", "Google Workspace", "Calendly"],
     outcome: "8 weeks → 4 weeks ramp-up time",
     link: "https://notion.so",
@@ -198,13 +184,12 @@ const projects = [
     number: "05",
     title: "SOP Library Build-Out",
     tag: "Documentation",
-    tagColor: "#a855f7",
     image:
-      "https://images.unsplash.com/photo-1568954270769-14e6f8e47ab7?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1568954270769-14e6f8e47ab7?w=600&q=70&fit=crop",
     summary:
       "Documented 25+ standard operating procedures across departments, eliminating knowledge silos.",
     description:
-      "Worked across four departments to identify undocumented processes, interviewed team leads, and produced a structured SOP library in Notion. Each document followed a consistent template covering purpose, steps, owners, and review cycles. Reduced onboarding time for new hires and dependency on tribal knowledge significantly.",
+      "Worked across four departments to identify undocumented processes, interviewed team leads, and produced a structured SOP library in Notion.",
     tools: ["Notion", "Loom", "Google Docs", "Slack"],
     outcome: "25 SOPs documented · Knowledge gaps eliminated",
     link: "https://notion.so",
@@ -216,13 +201,12 @@ const projects = [
     number: "06",
     title: "CRM Data Clean-Up & Automation",
     tag: "Systems",
-    tagColor: "#f43f5e",
     image:
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=70&fit=crop",
     summary:
       "Cleaned 3,000+ contact records and set up automated follow-up sequences in HubSpot.",
     description:
-      "Audited an existing CRM with over 3,000 contacts, removed duplicates, standardized field values, and re-segmented the list based on engagement history. Built automated email sequences for lead nurturing and set up deal-stage triggers to notify the sales team in real time. Pipeline visibility improved significantly within the first month.",
+      "Audited an existing CRM with over 3,000 contacts, removed duplicates, standardized field values, and re-segmented the list based on engagement history.",
     tools: ["HubSpot", "Zapier", "Google Sheets", "Slack"],
     outcome: "3,000 records cleaned · 3 automated pipelines live",
     link: "https://hubspot.com",
@@ -234,13 +218,12 @@ const projects = [
     number: "07",
     title: "Virtual Event Coordination",
     tag: "Events",
-    tagColor: "#0ea5e9",
     image:
-      "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=600&q=70&fit=crop",
     summary:
       "Coordinated a 300-attendee virtual summit across 6 time zones with zero technical issues.",
     description:
-      "Handled end-to-end logistics for a multi-day virtual summit: speaker scheduling, green room coordination, Zoom setup, attendee communications, and live troubleshooting. Built a master event timeline and briefed all stakeholders 48 hours before the event. Post-event satisfaction score was 4.8/5.",
+      "Handled end-to-end logistics for a multi-day virtual summit: speaker scheduling, green room coordination, Zoom setup, attendee communications, and live troubleshooting.",
     tools: ["Zoom", "Calendly", "Notion", "Gmail", "Canva"],
     outcome: "300 attendees · 4.8/5 satisfaction score",
     link: "https://zoom.us",
@@ -252,13 +235,12 @@ const projects = [
     number: "08",
     title: "Vendor & Contractor Management",
     tag: "Operations",
-    tagColor: "#84cc16",
     image:
-      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=700&q=75&fit=crop",
+      "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=600&q=70&fit=crop",
     summary:
       "Managed 12 freelance contractors across projects, tracking deliverables and payments centrally.",
     description:
-      "Set up a central contractor hub in Notion tracking active projects, deadlines, payment schedules, and contract status. Standardized the brief-to-delivery workflow and introduced weekly async check-ins via Loom. Reduced missed deadlines among contractors by 60% in the first quarter.",
+      "Set up a central contractor hub in Notion tracking active projects, deadlines, payment schedules, and contract status.",
     tools: ["Notion", "Wise", "Loom", "Google Sheets"],
     outcome: "12 contractors managed · 60% fewer missed deadlines",
     link: "https://notion.so",
@@ -267,7 +249,6 @@ const projects = [
   },
 ];
 
-/* ── Modal ── rendered outside section so overflow:hidden never clips it */
 function Modal({ project, onClose }) {
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -275,7 +256,6 @@ function Modal({ project, onClose }) {
       document.body.style.overflow = "";
     };
   }, []);
-
   useEffect(() => {
     const fn = (e) => {
       if (e.key === "Escape") onClose();
@@ -301,7 +281,7 @@ function Modal({ project, onClose }) {
         background: "rgba(3,3,3,0.92)",
         backdropFilter: "blur(14px)",
         WebkitBackdropFilter: "blur(14px)",
-        padding: "20px",
+        padding: "16px",
       }}
     >
       <motion.div
@@ -312,29 +292,29 @@ function Modal({ project, onClose }) {
         onClick={(e) => e.stopPropagation()}
         className="modal-inner"
         style={{
-          width: "min(660px, 90vw)",
-          maxHeight: "84vh",
+          width: "min(640px,92vw)",
+          maxHeight: "85vh",
           overflowY: "auto",
           background: "#0c0c0c",
           border: `1px solid ${project.accent}30`,
-          borderRadius: "20px",
+          borderRadius: "18px",
           position: "relative",
-          boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 48px 96px rgba(0,0,0,0.85), 0 0 80px ${project.accent}16`,
-          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+          boxShadow: `0 0 0 1px rgba(255,255,255,0.04),0 48px 96px rgba(0,0,0,0.85),0 0 80px ${project.accent}16`,
+          fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif",
         }}
       >
-        {/* Hero image */}
         <div
           style={{
             position: "relative",
-            height: "220px",
+            height: "180px",
             overflow: "hidden",
-            borderRadius: "20px 20px 0 0",
+            borderRadius: "18px 18px 0 0",
           }}
         >
           <img
             src={project.image}
             alt={project.title}
+            loading="lazy"
             style={{
               width: "100%",
               height: "100%",
@@ -346,10 +326,9 @@ function Modal({ project, onClose }) {
             style={{
               position: "absolute",
               inset: 0,
-              background: `linear-gradient(to bottom, rgba(12,12,12,0.1) 0%, rgba(12,12,12,0.98) 100%)`,
+              background: `linear-gradient(to bottom,rgba(12,12,12,0.1)0%,rgba(12,12,12,0.98)100%)`,
             }}
           />
-          {/* accent top bar */}
           <div
             style={{
               position: "absolute",
@@ -361,14 +340,12 @@ function Modal({ project, onClose }) {
               opacity: 0.75,
             }}
           />
-
-          {/* tag + close */}
           <div
             style={{
               position: "absolute",
-              top: "16px",
-              left: "22px",
-              right: "16px",
+              top: "14px",
+              left: "18px",
+              right: "14px",
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
@@ -381,9 +358,8 @@ function Modal({ project, onClose }) {
                 letterSpacing: "0.14em",
                 color: project.accent,
                 background: `${project.accent}28`,
-                padding: "3px 9px",
+                padding: "3px 8px",
                 borderRadius: "4px",
-                backdropFilter: "blur(8px)",
               }}
             >
               {project.tag}
@@ -402,91 +378,57 @@ function Modal({ project, onClose }) {
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "18px",
-                lineHeight: 1,
-                backdropFilter: "blur(8px)",
-                transition: "background 0.15s",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "rgba(255,255,255,0.14)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "rgba(0,0,0,0.55)")
-              }
             >
               ×
             </button>
           </div>
-
-          {/* Title overlaid at bottom of hero */}
           <div
             style={{
               position: "absolute",
-              bottom: "18px",
-              left: "22px",
-              right: "22px",
+              bottom: "14px",
+              left: "18px",
+              right: "18px",
             }}
           >
-            <div
+            <h2
               style={{
-                display: "flex",
-                alignItems: "flex-end",
-                justifyContent: "space-between",
+                fontSize: "clamp(16px,4vw,22px)",
+                fontWeight: 800,
+                color: "#fff",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.2,
+                textShadow: "0 2px 20px rgba(0,0,0,0.8)",
               }}
             >
-              <h2
-                style={{
-                  fontSize: "22px",
-                  fontWeight: 800,
-                  color: "#fff",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                  textShadow: "0 2px 20px rgba(0,0,0,0.8)",
-                }}
-              >
-                {project.title}
-              </h2>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontFamily: "monospace",
-                  color: "#333",
-                  flexShrink: 0,
-                  marginLeft: "12px",
-                }}
-              >
-                {project.number}
-              </span>
-            </div>
+              {project.title}
+            </h2>
           </div>
         </div>
-
-        {/* Body */}
-        <div style={{ padding: "22px 28px 28px" }}>
+        <div style={{ padding: "20px 22px 26px" }}>
           <p
             style={{
-              fontSize: "13.5px",
+              fontSize: "13px",
               lineHeight: 1.8,
               color: "#a1a1aa",
-              marginBottom: "22px",
+              marginBottom: "18px",
             }}
           >
             {project.description}
           </p>
-
-          {/* Tools — colored badges */}
-          <div style={{ marginBottom: "18px" }}>
+          <div style={{ marginBottom: "16px" }}>
             <p
               style={{
                 fontSize: "9px",
                 fontFamily: "monospace",
                 letterSpacing: "0.12em",
                 color: "#3f3f46",
-                marginBottom: "9px",
+                marginBottom: "8px",
               }}
             >
               TOOLS USED
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
               {project.tools.map((t, i) => {
                 const s = toolStyle(t);
                 return (
@@ -499,9 +441,8 @@ function Modal({ project, onClose }) {
                       background: s.bg,
                       border: `1px solid ${s.border}`,
                       borderRadius: "6px",
-                      padding: "4px 11px",
+                      padding: "3px 9px",
                       fontFamily: "monospace",
-                      letterSpacing: "0.04em",
                     }}
                   >
                     {t}
@@ -510,15 +451,13 @@ function Modal({ project, onClose }) {
               })}
             </div>
           </div>
-
-          {/* Outcome */}
           <div
             style={{
               background: `${project.accent}10`,
-              border: `1px solid ${project.accent}25`,
+              border: `1px solid ${project.accent}22`,
               borderRadius: "10px",
-              padding: "12px 16px",
-              marginBottom: "22px",
+              padding: "11px 14px",
+              marginBottom: "20px",
             }}
           >
             <p
@@ -536,8 +475,6 @@ function Modal({ project, onClose }) {
               {project.outcome}
             </p>
           </div>
-
-          {/* CTA — real project link */}
           <a
             href={project.link}
             target="_blank"
@@ -553,21 +490,11 @@ function Modal({ project, onClose }) {
               fontFamily: "monospace",
               letterSpacing: "0.1em",
               textDecoration: "none",
-              padding: "11px 22px",
+              padding: "10px 20px",
               borderRadius: "10px",
-              transition: "opacity 0.15s ease, transform 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.opacity = "0.82";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.opacity = "1";
-              e.currentTarget.style.transform = "translateY(0)";
             }}
           >
             VIEW PROJECT
-            {/* External link arrow */}
             <svg
               viewBox="0 0 16 16"
               width="12"
@@ -579,86 +506,77 @@ function Modal({ project, onClose }) {
               <path d="M4 12L12 4M12 4H6M12 4v6" />
             </svg>
           </a>
-
-          <style>{`
-            .modal-inner::-webkit-scrollbar { width: 4px; }
-            .modal-inner::-webkit-scrollbar-track { background: transparent; }
-            .modal-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
-          `}</style>
         </div>
+        <style>{`.modal-inner::-webkit-scrollbar{width:4px}.modal-inner::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:4px}`}</style>
       </motion.div>
     </motion.div>
   );
 }
 
-/* ── Card — image expands on hover, text collapses smoothly ── */
-function ProjectCard({ p, index, onClick }) {
+function ProjectCard({ p, index, onClick, mobile }) {
   const [hovered, setHovered] = useState(false);
-
   return (
     <motion.div
       onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      initial={{ opacity: 0, y: 28, scale: 0.97 }}
+      onMouseEnter={() => !mobile && setHovered(true)}
+      onMouseLeave={() => !mobile && setHovered(false)}
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: false, amount: 0.15 }}
+      viewport={{ once: false, amount: 0.1 }}
       transition={{
-        duration: 0.5,
-        delay: index * 0.05,
+        duration: 0.45,
+        delay: index * 0.04,
         ease: [0.16, 1, 0.3, 1],
       }}
       style={{
         background: p.bg,
         border: `1px solid ${hovered ? p.accent + "45" : "rgba(255,255,255,0.07)"}`,
-        borderRadius: "14px",
+        borderRadius: "12px",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         cursor: "pointer",
         position: "relative",
-        transition:
-          "border-color 0.25s ease, box-shadow 0.25s ease, transform 0.22s ease",
         transform: hovered
           ? "translateY(-3px) scale(1.015)"
           : "translateY(0) scale(1)",
         boxShadow: hovered
-          ? `0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px ${p.accent}30`
+          ? `0 16px 40px rgba(0,0,0,0.55),0 0 0 1px ${p.accent}30`
           : "none",
+        transition:
+          "border-color 0.25s ease,box-shadow 0.25s ease,transform 0.22s ease",
       }}
     >
-      {/* Image — expands on hover via animated height */}
       <motion.div
-        animate={{ height: hovered ? 130 : 80 }}
+        animate={{ height: hovered ? 95 : 58 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         style={{ overflow: "hidden", position: "relative", flexShrink: 0 }}
       >
         <motion.img
           src={p.image}
           alt={p.title}
+          loading="lazy"
           animate={{
             scale: hovered ? 1.08 : 1,
             filter: hovered
-              ? "brightness(0.75) saturate(1)"
-              : "brightness(0.6) saturate(0.85)",
+              ? "brightness(0.65) saturate(1)"
+              : "brightness(0.4) saturate(0.75)",
           }}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           style={{
             width: "100%",
-            height: "130px",
+            height: "95px",
             objectFit: "cover",
             display: "block",
           }}
         />
-        {/* Gradient to card bg */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: `linear-gradient(to bottom, transparent 40%, ${p.bg.replace("0.08)", "0.72)")} 100%)`,
+            background: `linear-gradient(to bottom,transparent 30%,${p.bg.replace("0.08)", "0.95)")}100%)`,
           }}
         />
-        {/* Accent top line */}
         <motion.div
           animate={{ opacity: hovered ? 0.9 : 0.5, scaleX: hovered ? 1 : 0.6 }}
           transition={{ duration: 0.3 }}
@@ -672,13 +590,12 @@ function ProjectCard({ p, index, onClick }) {
             transformOrigin: "left",
           }}
         />
-        {/* Tag + number */}
         <div
           style={{
             position: "absolute",
-            bottom: "8px",
-            left: "11px",
-            right: "11px",
+            bottom: "6px",
+            left: "10px",
+            right: "10px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -686,12 +603,12 @@ function ProjectCard({ p, index, onClick }) {
         >
           <span
             style={{
-              fontSize: "7.5px",
+              fontSize: "7px",
               fontFamily: "monospace",
               letterSpacing: "0.1em",
               color: p.accent,
               background: `${p.accent}22`,
-              padding: "2px 7px",
+              padding: "2px 6px",
               borderRadius: "3px",
             }}
           >
@@ -699,7 +616,7 @@ function ProjectCard({ p, index, onClick }) {
           </span>
           <span
             style={{
-              fontSize: "9px",
+              fontSize: "8px",
               fontFamily: "monospace",
               color: "#2e2e2e",
             }}
@@ -708,13 +625,11 @@ function ProjectCard({ p, index, onClick }) {
           </span>
         </div>
       </motion.div>
-
-      {/* Text body — shrinks as image grows */}
       <motion.div
         animate={{ opacity: hovered ? 0.7 : 1 }}
         transition={{ duration: 0.25 }}
         style={{
-          padding: "9px 13px 11px",
+          padding: "8px 11px 10px",
           display: "flex",
           flexDirection: "column",
           flex: 1,
@@ -725,26 +640,21 @@ function ProjectCard({ p, index, onClick }) {
         <div style={{ overflow: "hidden" }}>
           <h3
             style={{
-              fontSize: "12px",
+              fontSize: "11px",
               fontWeight: 700,
               color: "#e4e4e7",
               letterSpacing: "-0.01em",
               lineHeight: 1.35,
-              marginBottom: "4px",
+              marginBottom: "3px",
             }}
           >
             {p.title}
           </h3>
-          {/* Summary fades/collapses on hover to give room to image */}
           <motion.p
-            animate={{
-              opacity: hovered ? 0 : 1,
-              height: hovered ? 0 : "auto",
-              marginBottom: hovered ? 0 : "4px",
-            }}
+            animate={{ opacity: hovered ? 0 : 1, height: hovered ? 0 : "auto" }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             style={{
-              fontSize: "10px",
+              fontSize: "9.5px",
               color: "#52525b",
               lineHeight: 1.5,
               overflow: "hidden",
@@ -753,26 +663,24 @@ function ProjectCard({ p, index, onClick }) {
             {p.summary}
           </motion.p>
         </div>
-
-        {/* CTA — glows on hover */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: "4px",
             color: hovered ? p.accent : "#3a3a3a",
-            fontSize: "8.5px",
+            fontSize: "8px",
             fontFamily: "monospace",
             letterSpacing: "0.1em",
             transition: "color 0.2s ease",
-            marginTop: "6px",
+            marginTop: "5px",
           }}
         >
-          <span>VIEW PROJECTS</span>
+          <span>VIEW PROJECT</span>
           <svg
             viewBox="0 0 16 16"
-            width="8"
-            height="8"
+            width="7"
+            height="7"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -788,41 +696,33 @@ function ProjectCard({ p, index, onClick }) {
 export default function ProjectsPage() {
   const [active, setActive] = useState(null);
   const project = projects.find((p) => p.id === active);
+  const mobile = useIsMobile();
 
   return (
     <>
       <section
         className="h-screen w-full snap-start relative overflow-hidden bg-[#050505] text-white"
-        style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
+        style={{ fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif" }}
       >
-        <FontLoader />
-
-        {/* Ambient glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(99,102,241,0.07) 0%, transparent 70%)",
+              "radial-gradient(ellipse 60% 50% at 50% 50%,rgba(99,102,241,0.07)0%,transparent 70%)",
           }}
         />
 
-        {/* TOP BAR */}
         <div
-          className="absolute top-0 left-0 right-0 z-30 flex justify-between px-10 pt-6"
+          className="absolute top-0 left-0 right-0 z-30 flex justify-between px-5 md:px-10 pt-5 md:pt-6"
           style={{
             fontFamily: "monospace",
             fontSize: "9px",
             letterSpacing: "0.2em",
             color: "#333",
           }}
-        >
-          <span>PROJECTS</span>
-          <span></span>
-        </div>
-
-        {/* BOTTOM BAR */}
+        ></div>
         <div
-          className="absolute bottom-0 left-0 right-0 z-10 flex justify-between px-10 pb-5"
+          className="absolute bottom-0 left-0 right-0 z-10 flex justify-between px-5 md:px-10 pb-4 md:pb-5"
           style={{
             fontFamily: "monospace",
             fontSize: "9px",
@@ -835,39 +735,40 @@ export default function ProjectsPage() {
         </div>
 
         <div
-          className="absolute inset-0 flex flex-col px-10 pt-16 pb-12"
-          style={{ gap: "12px" }}
+          className="absolute inset-0 flex flex-col px-5 md:px-10 pt-14 md:pt-16 pb-10 md:pb-12"
+          style={{ gap: "10px" }}
         >
-          {/* Heading */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 28 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.4 }}
-            transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
             <h2
               style={{
-                fontSize: "clamp(2rem, 4vw, 3.2rem)",
+                fontSize: "clamp(1.6rem,5vw,3.2rem)",
                 fontWeight: 800,
                 letterSpacing: "-0.03em",
                 color: "#fff",
                 lineHeight: 1,
               }}
             >
-              PREVIOUS PROJECTS
+              PROJECTS
             </h2>
-            <p style={{ fontSize: "12px", color: "#3f3f46", marginTop: "4px" }}>
-              Hover to preview · Click to explore the full breakdown.
+            <p style={{ fontSize: "11px", color: "#3f3f46", marginTop: "4px" }}>
+              {mobile
+                ? "Tap to explore."
+                : "Hover to preview · Click to explore."}
             </p>
           </motion.div>
 
-          {/* 4×2 grid */}
+          {/* Grid: 2 cols on mobile, 4 cols on desktop */}
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gridTemplateRows: "repeat(2, 1fr)",
-              gap: "10px",
+              gridTemplateColumns: mobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+              gridTemplateRows: mobile ? "repeat(4,1fr)" : "repeat(2,1fr)",
+              gap: "8px",
               flex: 1,
               minHeight: 0,
             }}
@@ -878,13 +779,13 @@ export default function ProjectsPage() {
                 p={p}
                 index={i}
                 onClick={() => setActive(p.id)}
+                mobile={mobile}
               />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Modal outside section — never clipped */}
       <AnimatePresence>
         {active && project && (
           <Modal

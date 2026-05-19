@@ -1,17 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
-function FontLoader() {
+function useIsMobile() {
+  const [mobile, setMobile] = React.useState(() => window.innerWidth < 768);
   React.useEffect(() => {
-    if (document.getElementById("pjs-font")) return;
-    const l = Object.assign(document.createElement("link"), {
-      id: "pjs-font",
-      rel: "stylesheet",
-      href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap",
-    });
-    document.head.appendChild(l);
+    const fn = () => setMobile(window.innerWidth < 768);
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
-  return null;
+  return mobile;
 }
 
 const experiences = [
@@ -97,6 +94,224 @@ const experiences = [
   },
 ];
 
+/* ── Mobile accordion card ── */
+function MobileCard({ exp, index }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: false, amount: 0.2 }}
+      transition={{
+        duration: 0.5,
+        delay: index * 0.08,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      style={{
+        background: open ? `${exp.accent}12` : "rgba(255,255,255,0.02)",
+        border: `1px solid ${open ? exp.accent + "40" : "rgba(255,255,255,0.07)"}`,
+        borderRadius: "14px",
+        overflow: "hidden",
+        transition: "background 0.25s ease, border-color 0.25s ease",
+      }}
+    >
+      {/* Header row — tap to expand */}
+      <button
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "16px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        {/* Logo node */}
+        <div
+          style={{
+            width: "38px",
+            height: "38px",
+            borderRadius: "50%",
+            flexShrink: 0,
+            background: open ? exp.logoBg : "#1a1a1a",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "14px",
+            fontWeight: 800,
+            color: open ? "#fff" : "#555",
+            boxShadow: open
+              ? `0 0 0 2px #050505, 0 0 0 3px ${exp.accent}50`
+              : `0 0 0 2px #050505, 0 0 0 3px rgba(255,255,255,0.06)`,
+            transition: "all 0.3s ease",
+          }}
+        >
+          {exp.logo}
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p
+            style={{
+              fontSize: "9px",
+              fontFamily: "monospace",
+              color: exp.accent,
+              letterSpacing: "0.1em",
+              marginBottom: "2px",
+            }}
+          >
+            {exp.period}
+          </p>
+          <p
+            style={{
+              fontSize: "14px",
+              fontWeight: 800,
+              color: "#fff",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.2,
+              marginBottom: "2px",
+            }}
+          >
+            {exp.role}
+          </p>
+          <p style={{ fontSize: "11px", color: "#71717a" }}>{exp.company}</p>
+        </div>
+
+        {/* Chevron */}
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.25 }}
+          style={{ color: "#52525b", flexShrink: 0 }}
+        >
+          <svg
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M3 6l5 5 5-5" />
+          </svg>
+        </motion.div>
+      </button>
+
+      {/* Expandable body */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <div style={{ padding: "0 16px 18px" }}>
+              {/* Accent divider */}
+              <div
+                style={{
+                  height: "1px",
+                  background: `${exp.accent}30`,
+                  marginBottom: "14px",
+                }}
+              />
+
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#71717a",
+                  lineHeight: 1.65,
+                  marginBottom: "14px",
+                }}
+              >
+                {exp.shortDesc}
+              </p>
+
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontFamily: "monospace",
+                  color: exp.accent,
+                  letterSpacing: "0.12em",
+                  marginBottom: "8px",
+                }}
+              >
+                RESPONSIBILITIES
+              </p>
+              <ul
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  listStyle: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "6px",
+                  marginBottom: "14px",
+                }}
+              >
+                {exp.bullets.map((b, i) => (
+                  <li
+                    key={i}
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: exp.accent,
+                        fontSize: "13px",
+                        lineHeight: 1.2,
+                        flexShrink: 0,
+                      }}
+                    >
+                      •
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "11.5px",
+                        color: "#a1a1aa",
+                        lineHeight: 1.6,
+                      }}
+                    >
+                      {b}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                {exp.tools.map((t, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      fontSize: "9px",
+                      fontFamily: "monospace",
+                      letterSpacing: "0.06em",
+                      color: exp.accent,
+                      background: `${exp.accent}15`,
+                      border: `1px solid ${exp.accent}30`,
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ── Desktop hover card ── */
 const HoverDetail = memo(function HoverDetail({ exp, flipUp }) {
   return (
     <motion.div
@@ -339,6 +554,7 @@ const ExperienceEntry = memo(function ExperienceEntry({
             width: "42px",
             height: "42px",
             flexShrink: 0,
+            willChange: "transform",
           }}
         >
           {isNodeLit && (
@@ -355,6 +571,7 @@ const ExperienceEntry = memo(function ExperienceEntry({
                 borderRadius: "50%",
                 border: `1px solid ${exp.accent}`,
                 pointerEvents: "none",
+                willChange: "transform, opacity",
               }}
             />
           )}
@@ -395,8 +612,8 @@ const ExperienceEntry = memo(function ExperienceEntry({
 });
 
 export default function ExperiencePage() {
+  const mobile = useIsMobile();
   const scrollRef = useRef(null);
-  const sectionRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [atBottom, setAtBottom] = useState(false);
   const rafRef = useRef(null);
@@ -419,38 +636,24 @@ export default function ExperiencePage() {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
-    /*
-      The wheel event is attached to the SECTION (full viewport),
-      not just the scroll container. This means scrolling anywhere
-      on the page triggers it — fixing the "must hover bottom" issue.
-
-      Logic:
-      - If inner div can scroll in that direction → scroll it, block snap
-      - If inner div is at its boundary → do nothing → snap takes over
-    */
     const onWheel = (e) => {
       const { scrollTop, scrollHeight, clientHeight } = el;
-      const maxScroll = scrollHeight - clientHeight;
       const atTop = scrollTop <= 0;
-      const atBottom = scrollTop >= maxScroll - 1;
-      const scrollingDown = e.deltaY > 0;
-      const scrollingUp = e.deltaY < 0;
-
-      if ((scrollingDown && !atBottom) || (scrollingUp && !atTop)) {
-        // Inner div has room — take the event, scroll the inner div
+      const atBot = scrollTop + clientHeight >= scrollHeight - 2;
+      const goingDown = e.deltaY > 0;
+      const goingUp = e.deltaY < 0;
+      if (goingDown && !atBot) {
         e.preventDefault();
-        el.scrollBy({ top: e.deltaY, behavior: "auto" });
+        el.scrollTop += e.deltaY;
+      } else if (goingUp && !atTop) {
+        e.preventDefault();
+        el.scrollTop += e.deltaY;
       }
-      // At boundary — don't preventDefault, snap container handles it naturally
     };
-
-    const section = sectionRef.current;
-    section.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("scroll", handleScroll, { passive: true });
-
     return () => {
-      section.removeEventListener("wheel", onWheel);
+      el.removeEventListener("wheel", onWheel);
       el.removeEventListener("scroll", handleScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
@@ -458,18 +661,18 @@ export default function ExperiencePage() {
 
   return (
     <section
-      ref={sectionRef}
-      className="h-screen w-full snap-start bg-[#050505] text-white"
+      className="snap-start bg-[#050505] text-white"
       style={{
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         position: "relative",
+        /* mobile: natural height so content isn't clipped */
+        height: mobile ? "100dvh" : "100vh",
+        width: "100%",
       }}
     >
-      <FontLoader />
-
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -479,8 +682,9 @@ export default function ExperiencePage() {
         }}
       />
 
+      {/* TOP BAR */}
       <div
-        className="absolute top-0 left-0 right-0 z-30 flex justify-between px-10 pt-6"
+        className="absolute top-0 left-0 right-0 z-30 flex justify-between px-5 md:px-10 pt-5 md:pt-6"
         style={{
           fontFamily: "monospace",
           fontSize: "9px",
@@ -488,12 +692,13 @@ export default function ExperiencePage() {
           color: "#333",
         }}
       >
-        <span>/03. EXPERIENCE</span>
+        <span></span>
         <span>[ WORK HISTORY ]</span>
       </div>
 
+      {/* BOTTOM BAR */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-30 flex justify-between px-10 pb-5"
+        className="absolute bottom-0 left-0 right-0 z-30 flex justify-between px-5 md:px-10 pb-4 md:pb-5"
         style={{
           fontFamily: "monospace",
           fontSize: "9px",
@@ -502,7 +707,7 @@ export default function ExperiencePage() {
         }}
       >
         <span>PROFESSIONAL TIMELINE</span>
-        <span>SCROLL TO EXPLORE ↓</span>
+        <span>{mobile ? "" : "SCROLL TO EXPLORE ↓"}</span>
       </div>
 
       {/* HEADING */}
@@ -511,16 +716,18 @@ export default function ExperiencePage() {
           flexShrink: 0,
           position: "relative",
           zIndex: 20,
-          paddingTop: "54px",
-          paddingBottom: "22px",
-          paddingLeft: "48px",
-          paddingRight: "48px",
+          paddingTop: "46px",
+          paddingBottom: "16px",
+          paddingLeft: mobile ? "20px" : "48px",
+          paddingRight: mobile ? "20px" : "48px",
           background: "#050505",
         }}
       >
         <h2
           style={{
-            fontSize: "clamp(2rem, 3.5vw, 3rem)",
+            fontSize: mobile
+              ? "clamp(1.6rem,7vw,2rem)"
+              : "clamp(2rem,3.5vw,3rem)",
             fontWeight: 800,
             letterSpacing: "-0.03em",
             color: "#fff",
@@ -531,18 +738,20 @@ export default function ExperiencePage() {
         </h2>
         <p
           style={{
-            fontSize: "11px",
+            fontSize: "10px",
             color: "#3f3f46",
-            marginTop: "6px",
+            marginTop: "5px",
             fontFamily: "monospace",
             letterSpacing: "0.08em",
           }}
         >
-          HOVER AN ENTRY TO SEE FULL DETAILS
+          {mobile
+            ? "TAP AN ENTRY TO EXPAND"
+            : "HOVER AN ENTRY TO SEE FULL DETAILS"}
         </p>
       </div>
 
-      {/* SCROLL CONTAINER — pointer-events none so wheel events hit the section instead */}
+      {/* SCROLL CONTAINER */}
       <div
         ref={scrollRef}
         className="no-scrollbar"
@@ -550,149 +759,173 @@ export default function ExperiencePage() {
           flex: 1,
           overflowY: "scroll",
           overflowX: "hidden",
-          paddingLeft: "48px",
-          paddingRight: "48px",
-          paddingBottom: "48px",
+          paddingLeft: mobile ? "16px" : "48px",
+          paddingRight: mobile ? "16px" : "48px",
+          paddingBottom: "80px",
           position: "relative",
           zIndex: 10,
-          pointerEvents: "none",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "90px",
-            paddingTop: "20px",
-            paddingBottom: "40px",
-            position: "relative",
-          }}
-        >
+        {mobile ? (
+          /* ── MOBILE: accordion stack ── */
           <div
             style={{
-              position: "absolute",
-              left: "50%",
-              top: 0,
-              bottom: 0,
-              width: "1px",
-              background: "rgba(255,255,255,0.05)",
-              transform: "translateX(-50%)",
-              zIndex: 1,
-              pointerEvents: "none",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              paddingTop: "8px",
+              paddingBottom: "40px",
             }}
-          />
-
+          >
+            {experiences.map((exp, i) => (
+              <MobileCard key={exp.id} exp={exp} index={i} />
+            ))}
+          </div>
+        ) : (
+          /* ── DESKTOP: timeline ── */
           <div
             style={{
-              position: "absolute",
-              left: "50%",
-              top: 0,
-              width: "1px",
-              height: `${scrollProgress * 100}%`,
-              background:
-                "linear-gradient(to bottom, #6366f1 0%, #818cf8 60%, #a5b4fc 100%)",
-              transform: "translateX(-50%)",
-              zIndex: 2,
-              pointerEvents: "none",
-              opacity: 0.55,
-              boxShadow: "0 0 4px 1px rgba(99,102,241,0.3)",
-              transition: "height 0.06s linear",
-              borderRadius: "0 0 2px 2px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "90px",
+              paddingTop: "20px",
+              paddingBottom: "40px",
+              position: "relative",
             }}
-          />
-
-          {scrollProgress > 0 && scrollProgress < 0.98 && (
+          >
+            {/* Base line */}
             <div
               style={{
                 position: "absolute",
                 left: "50%",
-                top: `calc(${scrollProgress * 100}% - 3px)`,
-                width: "5px",
-                height: "5px",
-                background: "#a5b4fc",
-                borderRadius: "50%",
+                top: 0,
+                bottom: 0,
+                width: "1px",
+                background: "rgba(255,255,255,0.05)",
                 transform: "translateX(-50%)",
-                zIndex: 3,
+                zIndex: 1,
                 pointerEvents: "none",
-                opacity: 0.75,
-                boxShadow: "0 0 5px 1px rgba(99,102,241,0.35)",
-                transition: "top 0.06s linear",
               }}
             />
-          )}
-
-          {experiences.map((exp, i) => (
-            <ExperienceEntry
-              key={exp.id}
-              exp={exp}
-              scrollProgress={scrollProgress}
-              index={i}
-              totalEntries={experiences.length}
-              isLast={i >= experiences.length - 2}
-            />
-          ))}
-
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "10px",
-              position: "relative",
-              zIndex: 10,
-            }}
-          >
+            {/* Progress line */}
             <div
               style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                background: scrollProgress > 0.95 ? "#6366f1" : "#1a1a1a",
-                border: `1px solid ${scrollProgress > 0.95 ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
-                boxShadow:
-                  scrollProgress > 0.95
-                    ? "0 0 6px 2px rgba(99,102,241,0.3)"
-                    : "none",
-                transition: "all 0.4s ease",
+                position: "absolute",
+                left: "50%",
+                top: 0,
+                width: "1px",
+                height: `${scrollProgress * 100}%`,
+                background:
+                  "linear-gradient(to bottom,#6366f1 0%,#818cf8 60%,#a5b4fc 100%)",
+                transform: "translateX(-50%)",
+                zIndex: 2,
+                pointerEvents: "none",
+                opacity: 0.55,
+                boxShadow: "0 0 4px 1px rgba(99,102,241,0.3)",
+                transition: "height 0.06s linear",
+                borderRadius: "0 0 2px 2px",
+                willChange: "height",
               }}
             />
-            <p
+            {/* Tip dot */}
+            {scrollProgress > 0 && scrollProgress < 0.98 && (
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: `calc(${scrollProgress * 100}% - 3px)`,
+                  width: "5px",
+                  height: "5px",
+                  background: "#a5b4fc",
+                  borderRadius: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 3,
+                  pointerEvents: "none",
+                  opacity: 0.75,
+                  boxShadow: "0 0 5px 1px rgba(99,102,241,0.35)",
+                  transition: "top 0.06s linear",
+                  willChange: "top",
+                }}
+              />
+            )}
+
+            {experiences.map((exp, i) => (
+              <ExperienceEntry
+                key={exp.id}
+                exp={exp}
+                scrollProgress={scrollProgress}
+                index={i}
+                totalEntries={experiences.length}
+                isLast={i >= experiences.length - 2}
+              />
+            ))}
+
+            {/* End marker */}
+            <div
               style={{
-                fontSize: "9px",
-                fontFamily: "monospace",
-                color: scrollProgress > 0.95 ? "#6366f1" : "#2a2a2a",
-                letterSpacing: "0.12em",
-                transition: "color 0.4s ease",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "10px",
+                position: "relative",
+                zIndex: 10,
               }}
             >
-              END OF TIMELINE
-            </p>
+              <div
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: scrollProgress > 0.95 ? "#6366f1" : "#1a1a1a",
+                  border: `1px solid ${scrollProgress > 0.95 ? "rgba(99,102,241,0.5)" : "rgba(255,255,255,0.1)"}`,
+                  boxShadow:
+                    scrollProgress > 0.95
+                      ? "0 0 6px 2px rgba(99,102,241,0.3)"
+                      : "none",
+                  transition: "all 0.4s ease",
+                }}
+              />
+              <p
+                style={{
+                  fontSize: "9px",
+                  fontFamily: "monospace",
+                  color: scrollProgress > 0.95 ? "#6366f1" : "#2a2a2a",
+                  letterSpacing: "0.12em",
+                  transition: "color 0.4s ease",
+                }}
+              >
+                END OF TIMELINE
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <AnimatePresence>
-        {atBottom && (
-          <motion.div
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              position: "absolute",
-              bottom: "28px",
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 40,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "6px",
-              pointerEvents: "none",
-            }}
-          ></motion.div>
-        )}
-      </AnimatePresence>
+      {/* Scroll nudge — desktop only */}
+      {!mobile && (
+        <AnimatePresence>
+          {atBottom && (
+            <motion.div
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 6 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                position: "absolute",
+                bottom: "28px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 40,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "6px",
+                pointerEvents: "none",
+              }}
+            ></motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </section>
   );
 }
