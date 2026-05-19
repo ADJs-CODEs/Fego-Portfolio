@@ -294,7 +294,6 @@ const ExperienceEntry = memo(function ExperienceEntry({
           {isLeft ? "HOVER FOR MORE ›" : "‹ HOVER FOR MORE"}
         </p>
       </div>
-      {/* Flip dropdown upward for last two entries so it doesn't get clipped */}
       <AnimatePresence>
         {hovered && <HoverDetail exp={exp} flipUp={isLast} />}
       </AnimatePresence>
@@ -321,8 +320,6 @@ const ExperienceEntry = memo(function ExperienceEntry({
       >
         {isLeft && Card}
       </div>
-
-      {/* Timeline node */}
       <div
         style={{
           display: "flex",
@@ -342,7 +339,6 @@ const ExperienceEntry = memo(function ExperienceEntry({
             width: "42px",
             height: "42px",
             flexShrink: 0,
-            willChange: "transform",
           }}
         >
           {isNodeLit && (
@@ -359,7 +355,6 @@ const ExperienceEntry = memo(function ExperienceEntry({
                 borderRadius: "50%",
                 border: `1px solid ${exp.accent}`,
                 pointerEvents: "none",
-                willChange: "transform, opacity",
               }}
             />
           )}
@@ -386,7 +381,6 @@ const ExperienceEntry = memo(function ExperienceEntry({
           </div>
         </motion.div>
       </div>
-
       <div
         style={{
           display: "flex",
@@ -402,6 +396,7 @@ const ExperienceEntry = memo(function ExperienceEntry({
 
 export default function ExperiencePage() {
   const scrollRef = useRef(null);
+  const sectionRef = useRef(null);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [atBottom, setAtBottom] = useState(false);
   const rafRef = useRef(null);
@@ -426,43 +421,36 @@ export default function ExperiencePage() {
     if (!el) return;
 
     /*
-      KEY FIX:
-      Use a NON-passive wheel listener so we can call e.preventDefault()
-      and actually block the snap container from receiving the event while
-      the inner timeline still has scroll room.
+      The wheel event is attached to the SECTION (full viewport),
+      not just the scroll container. This means scrolling anywhere
+      on the page triggers it — fixing the "must hover bottom" issue.
 
       Logic:
-      - Scrolling DOWN  → block snap only if inner container is NOT at bottom
-      - Scrolling UP    → block snap only if inner container is NOT at top
-      - At either boundary → do nothing (let the event fall through to snap)
+      - If inner div can scroll in that direction → scroll it, block snap
+      - If inner div is at its boundary → do nothing → snap takes over
     */
     const onWheel = (e) => {
       const { scrollTop, scrollHeight, clientHeight } = el;
+      const maxScroll = scrollHeight - clientHeight;
       const atTop = scrollTop <= 0;
-      const atBottom = scrollTop + clientHeight >= scrollHeight - 2;
-
+      const atBottom = scrollTop >= maxScroll - 1;
       const scrollingDown = e.deltaY > 0;
       const scrollingUp = e.deltaY < 0;
 
-      if (scrollingDown && !atBottom) {
-        /* Inner container can still scroll down — consume the event */
+      if ((scrollingDown && !atBottom) || (scrollingUp && !atTop)) {
+        // Inner div has room — take the event, scroll the inner div
         e.preventDefault();
-        el.scrollTop += e.deltaY;
-      } else if (scrollingUp && !atTop) {
-        /* Inner container can still scroll up — consume the event */
-        e.preventDefault();
-        el.scrollTop += e.deltaY;
+        el.scrollBy({ top: e.deltaY, behavior: "auto" });
       }
-      /* Otherwise: boundary reached → don't preventDefault →
-         event bubbles up to snap container → page snaps naturally */
+      // At boundary — don't preventDefault, snap container handles it naturally
     };
 
-    /* MUST be non-passive to allow preventDefault */
-    el.addEventListener("wheel", onWheel, { passive: false });
+    const section = sectionRef.current;
+    section.addEventListener("wheel", onWheel, { passive: false });
     el.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
-      el.removeEventListener("wheel", onWheel);
+      section.removeEventListener("wheel", onWheel);
       el.removeEventListener("scroll", handleScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
@@ -470,6 +458,7 @@ export default function ExperiencePage() {
 
   return (
     <section
+      ref={sectionRef}
       className="h-screen w-full snap-start bg-[#050505] text-white"
       style={{
         fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
@@ -490,7 +479,6 @@ export default function ExperiencePage() {
         }}
       />
 
-      {/* TOP BAR */}
       <div
         className="absolute top-0 left-0 right-0 z-30 flex justify-between px-10 pt-6"
         style={{
@@ -500,11 +488,10 @@ export default function ExperiencePage() {
           color: "#333",
         }}
       >
-        <span></span>
+        <span>/03. EXPERIENCE</span>
         <span>[ WORK HISTORY ]</span>
       </div>
 
-      {/* BOTTOM BAR */}
       <div
         className="absolute bottom-0 left-0 right-0 z-30 flex justify-between px-10 pb-5"
         style={{
@@ -555,7 +542,7 @@ export default function ExperiencePage() {
         </p>
       </div>
 
-      {/* SCROLL CONTAINER */}
+      {/* SCROLL CONTAINER — pointer-events none so wheel events hit the section instead */}
       <div
         ref={scrollRef}
         className="no-scrollbar"
@@ -565,9 +552,10 @@ export default function ExperiencePage() {
           overflowX: "hidden",
           paddingLeft: "48px",
           paddingRight: "48px",
-          paddingBottom: "80px",
+          paddingBottom: "48px",
           position: "relative",
           zIndex: 10,
+          pointerEvents: "none",
         }}
       >
         <div
@@ -580,7 +568,6 @@ export default function ExperiencePage() {
             position: "relative",
           }}
         >
-          {/* Base timeline line */}
           <div
             style={{
               position: "absolute",
@@ -595,7 +582,6 @@ export default function ExperiencePage() {
             }}
           />
 
-          {/* Progress line */}
           <div
             style={{
               position: "absolute",
@@ -612,11 +598,9 @@ export default function ExperiencePage() {
               boxShadow: "0 0 4px 1px rgba(99,102,241,0.3)",
               transition: "height 0.06s linear",
               borderRadius: "0 0 2px 2px",
-              willChange: "height",
             }}
           />
 
-          {/* Tip dot */}
           {scrollProgress > 0 && scrollProgress < 0.98 && (
             <div
               style={{
@@ -633,7 +617,6 @@ export default function ExperiencePage() {
                 opacity: 0.75,
                 boxShadow: "0 0 5px 1px rgba(99,102,241,0.35)",
                 transition: "top 0.06s linear",
-                willChange: "top",
               }}
             />
           )}
@@ -649,7 +632,6 @@ export default function ExperiencePage() {
             />
           ))}
 
-          {/* End marker */}
           <div
             style={{
               display: "flex",
@@ -689,7 +671,6 @@ export default function ExperiencePage() {
         </div>
       </div>
 
-      {/* Scroll-to-continue nudge */}
       <AnimatePresence>
         {atBottom && (
           <motion.div
@@ -738,7 +719,6 @@ export default function ExperiencePage() {
                     delay: i * 0.18,
                     ease: "easeInOut",
                   }}
-                  style={{ willChange: "transform, opacity" }}
                 >
                   <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
                     <path
