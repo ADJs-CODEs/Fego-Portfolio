@@ -476,7 +476,7 @@ export default function AboutPage() {
                   marginBottom: "5px",
                 }}
               >
-                2021 – Present
+                2024 – Graduate
               </p>
               <p
                 style={{
