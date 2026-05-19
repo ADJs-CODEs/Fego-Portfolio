@@ -690,49 +690,7 @@ export default function ExperiencePage() {
               gap: "6px",
               pointerEvents: "none",
             }}
-          >
-            <span
-              style={{
-                fontFamily: "monospace",
-                fontSize: "8px",
-                letterSpacing: "0.2em",
-                color: "rgba(165,180,252,0.55)",
-              }}
-            >
-              CONTINUE SCROLLING
-            </span>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "2px",
-              }}
-            >
-              {[0, 1, 2].map((i) => (
-                <motion.div
-                  key={i}
-                  animate={{ opacity: [0.2, 0.7, 0.2], y: [0, 3, 0] }}
-                  transition={{
-                    duration: 1.2,
-                    repeat: Infinity,
-                    delay: i * 0.18,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <svg width="12" height="7" viewBox="0 0 12 7" fill="none">
-                    <path
-                      d="M1 1l5 5 5-5"
-                      stroke="rgba(165,180,252,0.6)"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          ></motion.div>
         )}
       </AnimatePresence>
     </section>
