@@ -8,10 +8,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          three: ["three"],
-          motion: ["framer-motion"],
-          email: ["@emailjs/browser"],
+        manualChunks(id) {
+          if (id.includes("three")) return "three";
+          if (id.includes("framer-motion")) return "motion";
+          if (id.includes("@emailjs")) return "email";
         },
       },
     },
