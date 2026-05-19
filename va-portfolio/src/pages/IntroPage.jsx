@@ -21,7 +21,7 @@ function ChibiDoll({ bp }) {
   const canvasRef = useRef(null);
 
   const cfg = {
-    mobile: { cw: 160, ch: 260, right: "-10px", bottom: "0px", opacity: 0.78 },
+    mobile: { cw: 160, ch: 260, right: "-10px", bottom: "30%", opacity: 0.78 },
     tablet: { cw: 230, ch: 370, right: "0px", bottom: "0px", opacity: 1 },
     desktop: { cw: 340, ch: 520, right: "0px", bottom: "0px", opacity: 1 },
   }[bp];
@@ -440,7 +440,7 @@ export default function IntroPage() {
         className="flex justify-between items-center w-full font-mono tracking-widest text-neutral-500 relative z-20"
         style={{ fontSize: isMobile ? "8px" : "10px" }}
       >
-        <div></div>
+        <div>/01. INTRO</div>
         <div
           className="border border-neutral-800 px-3 py-1 rounded-full bg-neutral-900/30 backdrop-blur-sm text-neutral-400"
           style={{ fontSize: isMobile ? "7px" : "9px" }}
@@ -491,7 +491,9 @@ export default function IntroPage() {
           <div style={{ letterSpacing: "0.15em", color: "#333" }}>
             [ CREATIVE DIRECTION ]
           </div>
-          <div style={{ letterSpacing: "0.15em", color: "#444" }}></div>
+          <div style={{ letterSpacing: "0.15em", color: "#444" }}>
+            EFFICIENCY &amp; SCALE
+          </div>
         </div>
         <div className="flex flex-col items-center gap-2">
           {!isMobile && (
