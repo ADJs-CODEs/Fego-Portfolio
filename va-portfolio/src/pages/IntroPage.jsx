@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import characterImg from "./assets/VA-character.png";
 
 function useBreakpoint() {
   const get = () => {
@@ -171,7 +172,7 @@ function CharacterDoll({ bp }) {
             />
 
             <img
-              src="src/assets/VA-characters.png"
+              src={characterImg}
               alt="Virtual Assistant"
               style={{
                 width: "100%",
