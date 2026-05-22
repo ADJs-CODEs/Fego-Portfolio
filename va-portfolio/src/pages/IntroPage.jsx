@@ -171,7 +171,7 @@ function CharacterDoll({ bp }) {
             />
 
             <img
-              src="src/assets/VA-character.png"
+              src="src/assets/VA-characters.png"
               alt="Virtual Assistant"
               style={{
                 width: "100%",
