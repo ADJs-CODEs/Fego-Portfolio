@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import * as THREE from "three";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
 function useBreakpoint() {
   const get = () => {
@@ -17,409 +17,178 @@ function useBreakpoint() {
   return bp;
 }
 
-function ChibiDoll({ bp }) {
-  const canvasRef = useRef(null);
-
+// The character — PNG with CSS animations mimicking the Three.js chibi behavior
+function CharacterDoll({ bp }) {
   const cfg = {
-    mobile: { cw: 160, ch: 260, right: "-10px", bottom: "0px", opacity: 0.78 },
-    tablet: { cw: 230, ch: 370, right: "0px", bottom: "0px", opacity: 1 },
-    desktop: { cw: 340, ch: 520, right: "0px", bottom: "0px", opacity: 1 },
+    mobile: { width: "150px", right: "0px", bottom: "0px", opacity: 0.85 },
+    tablet: { width: "220px", right: "8px", bottom: "0px", opacity: 1 },
+    desktop: { width: "300px", right: "20px", bottom: "0px", opacity: 1 },
   }[bp];
 
+  const containerRef = useRef(null);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Raw values — set directly from mouse events
+  const rawRotY = useMotionValue(0);
+  const rawRotX = useMotionValue(0);
+
+  // ✅ Spring the raw value FIRST, then transform — this is the correct chain
+  const idleCfg = { stiffness: 40, damping: 15, mass: 1.2 };
+  const hoverCfg = { stiffness: 200, damping: 22, mass: 0.6 };
+  const activeCfg = isHovered ? hoverCfg : idleCfg;
+
+  const springY = useSpring(rawRotY, activeCfg);
+  const springX = useSpring(rawRotX, activeCfg);
+
+  // Map [-1,1] → degrees — wider range on hover
+  const rotateY = useTransform(
+    springY,
+    [-1, 1],
+    isHovered ? [-18, 18] : [-5, 5],
+  );
+  const rotateX = useTransform(
+    springX,
+    [-1, 1],
+    isHovered ? [10, -10] : [3, -3],
+  );
+  const scale = useSpring(isHovered ? 1.05 : 1, {
+    stiffness: 150,
+    damping: 20,
+  });
+
+  // Global idle tracking (whole window)
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const renderer = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-      alpha: true,
-    });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(cfg.cw, cfg.ch, false);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, cfg.cw / cfg.ch, 0.1, 50);
-    camera.position.set(0, 0, 9);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const d1 = new THREE.DirectionalLight(0xfff4ea, 1.4);
-    d1.position.set(3, 6, 4);
-    scene.add(d1);
-    const d2 = new THREE.DirectionalLight(0x6366f1, 0.5);
-    d2.position.set(-4, -2, -3);
-    scene.add(d2);
-    const d3 = new THREE.DirectionalLight(0xffd6e8, 0.5);
-    d3.position.set(0, 0, 6);
-    scene.add(d3);
-
-    const gold = new THREE.MeshStandardMaterial({
-      color: 0xe8c84a,
-      metalness: 0.9,
-      roughness: 0.12,
-    });
-    const skin = new THREE.MeshStandardMaterial({
-      color: 0xf5c5a0,
-      roughness: 0.65,
-      metalness: 0.02,
-    });
-    const hair = new THREE.MeshStandardMaterial({
-      color: 0x1a0f05,
-      roughness: 0.8,
-    });
-    const dress = new THREE.MeshStandardMaterial({
-      color: 0xc8a8e8,
-      roughness: 0.55,
-    });
-    const dressD = new THREE.MeshStandardMaterial({
-      color: 0xb090d8,
-      roughness: 0.55,
-    });
-    const white = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.45,
-    });
-    const blush = new THREE.MeshStandardMaterial({
-      color: 0xf4a0b0,
-      transparent: true,
-      opacity: 0.55,
-      roughness: 1,
-    });
-    const rose = new THREE.MeshStandardMaterial({
-      color: 0xe84070,
-      roughness: 0.55,
-    });
-    const shoe = new THREE.MeshStandardMaterial({
-      color: 0xc87090,
-      roughness: 0.6,
-    });
-    const sock = new THREE.MeshStandardMaterial({
-      color: 0xfff0f5,
-      roughness: 0.5,
-    });
-    const bow = new THREE.MeshStandardMaterial({
-      color: 0xff8fb0,
-      roughness: 0.5,
-    });
-    const pupil = new THREE.MeshStandardMaterial({
-      color: 0x2a1505,
-      roughness: 0.4,
-    });
-    const shine = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.3,
-    });
-
-    const assembly = new THREE.Group();
-
-    /* chain */
-    const chainGroup = new THREE.Group();
-    const topRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.16, 0.04, 12, 32),
-      gold,
-    );
-    topRing.position.y = 0;
-    chainGroup.add(topRing);
-    const LINKS = 5,
-      LINK_GAP = 0.38;
-    for (let i = 0; i < LINKS; i++) {
-      const lk = new THREE.Mesh(
-        new THREE.TorusGeometry(0.1, 0.032, 10, 24),
-        gold,
-      );
-      lk.position.y = -(i + 1) * LINK_GAP;
-      lk.rotation.x = i % 2 === 0 ? 0 : Math.PI * 0.5;
-      chainGroup.add(lk);
-    }
-    chainGroup.position.y = 2.7;
-    assembly.add(chainGroup);
-
-    /* doll */
-    const doll = new THREE.Group();
-    doll.position.y = 2.7 - (LINKS + 1) * LINK_GAP - 0.1;
-
-    const add = (geo, mat, px = 0, py = 0, pz = 0, rx, ry, rz, sx, sy, sz) => {
-      const m = new THREE.Mesh(geo, mat);
-      m.position.set(px, py, pz);
-      if (rx !== undefined) m.rotation.set(rx, ry || 0, rz || 0);
-      if (sx !== undefined) m.scale.set(sx, sy ?? sx, sz ?? sx);
-      doll.add(m);
-      return m;
+    const onMove = (e) => {
+      if (isHovered) return; // local handler takes over on hover
+      rawRotY.set((e.clientX / window.innerWidth - 0.5) * 2);
+      rawRotX.set((e.clientY / window.innerHeight - 0.5) * 2);
     };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [isHovered]);
 
-    add(new THREE.TorusGeometry(0.1, 0.032, 10, 24), gold, 0, 1.05);
-    add(
-      new THREE.SphereGeometry(0.52, 24, 18),
-      skin,
-      0,
-      0.72,
-      0,
-      0,
-      0,
-      0,
-      1,
-      1.05,
-      1,
-    );
-    add(
-      new THREE.SphereGeometry(
-        0.545,
-        18,
-        14,
-        0,
-        Math.PI * 2,
-        0,
-        Math.PI * 0.52,
-      ),
-      hair,
-      0,
-      0.86,
-    );
-    [-1, 1].forEach((s) =>
-      add(
-        new THREE.CylinderGeometry(0.13, 0.08, 0.38, 10),
-        hair,
-        s * 0.45,
-        0.6,
-      ),
-    );
-    [-1, 1].forEach((s) => {
-      add(new THREE.SphereGeometry(0.19, 14, 12), hair, s * 0.48, 1.06);
-      add(
-        new THREE.SphereGeometry(0.09, 8, 6),
-        bow,
-        s * 0.48 - 0.08,
-        1.18,
-        0.06,
-        0,
-        0,
-        0,
-        1.4,
-        0.7,
-        0.5,
-      );
-      add(
-        new THREE.SphereGeometry(0.09, 8, 6),
-        bow,
-        s * 0.48 + 0.08,
-        1.18,
-        0.06,
-        0,
-        0,
-        0,
-        1.4,
-        0.7,
-        0.5,
-      );
-      add(new THREE.SphereGeometry(0.055, 8, 6), white, s * 0.48, 1.18, 0.09);
-    });
-    [-1, 1].forEach((s) => {
-      add(new THREE.CircleGeometry(0.11, 16), white, s * 0.18, 0.69, 0.51);
-      add(new THREE.CircleGeometry(0.075, 14), pupil, s * 0.18, 0.69, 0.515);
-      add(
-        new THREE.CircleGeometry(0.03, 10),
-        shine,
-        s * 0.18 + 0.04,
-        0.72,
-        0.52,
-      );
-      add(new THREE.BoxGeometry(0.22, 0.03, 0.01), hair, s * 0.18, 0.79, 0.51);
-    });
-    [-1, 1].forEach((s) =>
-      add(new THREE.CircleGeometry(0.1, 14), blush, s * 0.32, 0.6, 0.51),
-    );
+  // Local hover tracking (relative to character bounds)
+  const handleMouseMove = (e) => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    rawRotY.set(((e.clientX - rect.left) / rect.width - 0.5) * 2);
+    rawRotX.set(((e.clientY - rect.top) / rect.height - 0.5) * 2);
+  };
 
-    const sm = new THREE.Mesh(
-      new THREE.TorusGeometry(0.09, 0.015, 6, 16, Math.PI),
-      new THREE.MeshStandardMaterial({ color: 0xc07060, roughness: 0.6 }),
-    );
-    sm.position.set(0, 0.57, 0.515);
-    sm.rotation.z = Math.PI;
-    doll.add(sm);
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    // Smoothly reset to global mouse position — don't snap to zero
+    rawRotY.set(window._mx ?? 0);
+    rawRotX.set(window._my ?? 0);
+  };
 
-    add(
-      new THREE.SphereGeometry(0.025, 8, 6),
-      new THREE.MeshStandardMaterial({ color: 0xe0a888, roughness: 0.7 }),
-      0,
-      0.64,
-      0.53,
-    );
-    add(new THREE.CylinderGeometry(0.14, 0.16, 0.18, 14), skin, 0, 0.27);
-    add(
-      new THREE.TorusGeometry(0.22, 0.07, 10, 24),
-      white,
-      0,
-      0.2,
-      0,
-      Math.PI * 0.5,
-    );
-    add(new THREE.CylinderGeometry(0.24, 0.3, 0.38, 18), dress, 0, 0.01);
-    add(new THREE.CylinderGeometry(0.38, 0.52, 0.36, 22), dress, 0, -0.28);
-    add(new THREE.CylinderGeometry(0.53, 0.57, 0.09, 22), dressD, 0, -0.45);
-    add(new THREE.CylinderGeometry(0.5, 0.54, 0.07, 22), white, 0, -0.52);
-    add(
-      new THREE.SphereGeometry(0.07, 8, 6),
-      bow,
-      -0.07,
-      0.17,
-      0.27,
-      0,
-      0,
-      0,
-      1.5,
-      0.7,
-      0.5,
-    );
-    add(
-      new THREE.SphereGeometry(0.07, 8, 6),
-      bow,
-      0.07,
-      0.17,
-      0.27,
-      0,
-      0,
-      0,
-      1.5,
-      0.7,
-      0.5,
-    );
-    add(new THREE.SphereGeometry(0.045, 8, 6), white, 0, 0.17, 0.29);
-    [-1, 1].forEach((s) => {
-      add(
-        new THREE.SphereGeometry(0.13, 12, 10),
-        dress,
-        s * 0.36,
-        0.15,
-        0.08,
-        0,
-        0,
-        0,
-        1,
-        0.85,
-        0.85,
-      );
-      add(
-        new THREE.CylinderGeometry(0.075, 0.065, 0.34, 10),
-        dress,
-        s * 0.32,
-        0.04,
-        0.16,
-        -0.48,
-        0,
-        s * 0.65,
-      );
-      add(new THREE.SphereGeometry(0.085, 10, 8), skin, s * 0.13, 0.3, 0.35);
-    });
-    add(
-      new THREE.SphereGeometry(0.08, 10, 8),
-      rose,
-      -0.07,
-      0.42,
-      0.38,
-      0,
-      0,
-      0,
-      1,
-      1,
-      0.6,
-    );
-    add(
-      new THREE.SphereGeometry(0.08, 10, 8),
-      rose,
-      0.07,
-      0.42,
-      0.38,
-      0,
-      0,
-      0,
-      1,
-      1,
-      0.6,
-    );
-    add(
-      new THREE.ConeGeometry(0.11, 0.14, 12),
-      rose,
-      0,
-      0.3,
-      0.37,
-      Math.PI,
-      0,
-      0,
-      1,
-      1,
-      0.6,
-    );
-    [-1, 1].forEach((s) => {
-      add(
-        new THREE.CylinderGeometry(0.1, 0.09, 0.32, 12),
-        skin,
-        s * 0.12,
-        -0.74,
-      );
-      add(
-        new THREE.CylinderGeometry(0.106, 0.1, 0.14, 12),
-        sock,
-        s * 0.12,
-        -0.88,
-      );
-      add(
-        new THREE.SphereGeometry(0.13, 12, 8),
-        shoe,
-        s * 0.12,
-        -0.98,
-        0.06,
-        0,
-        0,
-        0,
-        1,
-        0.65,
-        1.4,
-      );
-      add(new THREE.BoxGeometry(0.24, 0.03, 0.04), shoe, s * 0.12, -0.93, 0.1);
-    });
-
-    assembly.add(doll);
-    assembly.position.y = 11;
-    scene.add(assembly);
-
-    let startTime = null;
-    setTimeout(() => {
-      startTime = performance.now();
-    }, 600);
-    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
-
-    let animId;
-    function animate(t) {
-      animId = requestAnimationFrame(animate);
-      const time = t * 0.001;
-      let p = 0;
-      if (startTime !== null)
-        p = Math.min((performance.now() - startTime) / 2400, 1);
-      assembly.position.y = (1 - easeOut(p)) * 11;
-      assembly.rotation.y = time * 0.55;
-      if (p > 0.85) assembly.rotation.z = Math.sin(time * 1.6) * 0.04;
-      renderer.render(scene, camera);
-    }
-    animId = requestAnimationFrame(animate);
-    return () => {
-      cancelAnimationFrame(animId);
-      renderer.dispose();
+  // Cache global mouse for smooth leave transition
+  useEffect(() => {
+    const track = (e) => {
+      window._mx = (e.clientX / window.innerWidth - 0.5) * 2;
+      window._my = (e.clientY / window.innerHeight - 0.5) * 2;
     };
-  }, [cfg.cw, cfg.ch]);
+    window.addEventListener("mousemove", track);
+    return () => window.removeEventListener("mousemove", track);
+  }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
+    <motion.div
+      ref={containerRef}
+      initial={{ y: -420, opacity: 0 }}
+      animate={{ y: 0, opacity: cfg.opacity }}
+      transition={{ delay: 0.6, duration: 2.4, ease: [0.16, 1, 0.3, 1] }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
       style={{
         position: "absolute",
         right: cfg.right,
         bottom: cfg.bottom,
-        width: `${cfg.cw}px`,
-        height: `${cfg.ch}px`,
-        opacity: cfg.opacity,
-        pointerEvents: "none",
+        width: cfg.width,
+        pointerEvents: "auto",
+        zIndex: 10,
+        perspective: "600px",
+        cursor: "crosshair",
       }}
-    />
+    >
+      <motion.div
+        style={{
+          rotateY,
+          rotateX,
+          scale,
+          transformStyle: "preserve-3d",
+        }}
+      >
+        {/* Idle sway */}
+        <motion.div
+          animate={{ rotate: [0, 0.6, 0, -0.6, 0] }}
+          transition={{ duration: 6, ease: "easeInOut", repeat: Infinity }}
+        >
+          {/* Bob */}
+          <motion.div
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 5, ease: "easeInOut", repeat: Infinity }}
+          >
+            {/* Shadow */}
+            <motion.div
+              animate={{
+                scaleX: isHovered ? 1.12 : [1, 1.05, 1],
+                opacity: isHovered ? 0.55 : [0.2, 0.3, 0.2],
+              }}
+              transition={{
+                duration: isHovered ? 0.3 : 5,
+                ease: "easeInOut",
+                repeat: isHovered ? 0 : Infinity,
+              }}
+              style={{
+                position: "absolute",
+                bottom: "-8px",
+                left: "10%",
+                width: "80%",
+                height: "20px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(ellipse, rgba(99,102,241,0.5) 0%, transparent 70%)",
+                filter: "blur(7px)",
+                transformOrigin: "center",
+              }}
+            />
+
+            {/* Hover glow */}
+            <motion.div
+              animate={{ opacity: isHovered ? 0.45 : 0 }}
+              transition={{ duration: 0.35 }}
+              style={{
+                position: "absolute",
+                inset: "-20px",
+                borderRadius: "50%",
+                background:
+                  "radial-gradient(ellipse at 50% 80%, rgba(99,102,241,0.3) 0%, transparent 65%)",
+                filter: "blur(10px)",
+                pointerEvents: "none",
+              }}
+            />
+
+            <img
+              src="src/assets/VA-character.png"
+              alt="Virtual Assistant"
+              style={{
+                width: "100%",
+                display: "block",
+                mixBlendMode: "lighten",
+                filter: isHovered
+                  ? "drop-shadow(0 16px 40px rgba(99,102,241,0.4)) drop-shadow(0 0 20px rgba(6,182,212,0.2))"
+                  : "drop-shadow(0 10px 24px rgba(99,102,241,0.18)) drop-shadow(0 0 10px rgba(6,182,212,0.07))",
+                transition: "filter 0.4s ease",
+                userSelect: "none",
+                draggable: false,
+              }}
+            />
+          </motion.div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -449,7 +218,7 @@ export default function IntroPage() {
         </div>
       </div>
 
-      {/* centre text — nudged left on mobile/tablet so doll doesn't cover it */}
+      {/* centre text */}
       <div
         className="relative z-20 text-center mx-auto"
         style={{ paddingRight: isMobile ? "80px" : isTablet ? "150px" : "0px" }}
@@ -508,8 +277,8 @@ export default function IntroPage() {
         </div>
       </div>
 
-      {/* chibi doll */}
-      <ChibiDoll bp={bp} />
+      {/* Character — drops in from top just like the Three.js chibi did */}
+      <CharacterDoll bp={bp} />
     </section>
   );
 }
