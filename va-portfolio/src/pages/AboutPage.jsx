@@ -416,7 +416,7 @@ export default function AboutPage() {
                     marginBottom: "4px",
                   }}
                 >
-                  2021 – Present
+                  2020 - 2024 – Graduate
                 </p>
                 <p
                   style={{
@@ -425,7 +425,7 @@ export default function AboutPage() {
                     fontWeight: 700,
                   }}
                 >
-                  University of Lagos
+                  LandMark University
                 </p>
                 <p style={{ fontSize: "12px", color: "#52525b" }}>Nigeria</p>
               </div>
@@ -621,7 +621,7 @@ export default function AboutPage() {
                     marginBottom: "5px",
                   }}
                 >
-                  2021 – Present
+                  2020 – 2024 - Graduate
                 </p>
                 <p
                   style={{
@@ -631,7 +631,7 @@ export default function AboutPage() {
                     lineHeight: 1.3,
                   }}
                 >
-                  University of Lagos
+                  LandMark University
                 </p>
                 <p
                   style={{
