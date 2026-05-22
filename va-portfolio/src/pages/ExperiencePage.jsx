@@ -115,7 +115,6 @@ function MobileCard({ exp, index }) {
         transition: "background 0.25s ease, border-color 0.25s ease",
       }}
     >
-      {/* Header row — tap to expand */}
       <button
         onClick={() => setOpen((o) => !o)}
         style={{
@@ -130,7 +129,6 @@ function MobileCard({ exp, index }) {
           textAlign: "left",
         }}
       >
-        {/* Logo node */}
         <div
           style={{
             width: "38px",
@@ -152,7 +150,6 @@ function MobileCard({ exp, index }) {
         >
           {exp.logo}
         </div>
-
         <div style={{ flex: 1, minWidth: 0 }}>
           <p
             style={{
@@ -179,8 +176,6 @@ function MobileCard({ exp, index }) {
           </p>
           <p style={{ fontSize: "11px", color: "#71717a" }}>{exp.company}</p>
         </div>
-
-        {/* Chevron */}
         <motion.div
           animate={{ rotate: open ? 180 : 0 }}
           transition={{ duration: 0.25 }}
@@ -199,7 +194,6 @@ function MobileCard({ exp, index }) {
         </motion.div>
       </button>
 
-      {/* Expandable body */}
       <AnimatePresence initial={false}>
         {open && (
           <motion.div
@@ -210,7 +204,6 @@ function MobileCard({ exp, index }) {
             style={{ overflow: "hidden" }}
           >
             <div style={{ padding: "0 16px 18px" }}>
-              {/* Accent divider */}
               <div
                 style={{
                   height: "1px",
@@ -218,7 +211,6 @@ function MobileCard({ exp, index }) {
                   marginBottom: "14px",
                 }}
               />
-
               <p
                 style={{
                   fontSize: "12px",
@@ -229,7 +221,6 @@ function MobileCard({ exp, index }) {
               >
                 {exp.shortDesc}
               </p>
-
               <p
                 style={{
                   fontSize: "9px",
@@ -283,7 +274,6 @@ function MobileCard({ exp, index }) {
                   </li>
                 ))}
               </ul>
-
               <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
                 {exp.tools.map((t, i) => (
                   <span
@@ -311,7 +301,7 @@ function MobileCard({ exp, index }) {
   );
 }
 
-/* ── Desktop hover card ── */
+/* ── Desktop hover detail ── */
 const HoverDetail = memo(function HoverDetail({ exp, flipUp }) {
   return (
     <motion.div
@@ -523,7 +513,7 @@ const ExperienceEntry = memo(function ExperienceEntry({
         gridTemplateColumns: "1fr 56px 1fr",
         alignItems: "center",
         position: "relative",
-        minHeight: "140px",
+        minHeight: "120px",
       }}
     >
       <div
@@ -668,11 +658,11 @@ export default function ExperiencePage() {
         flexDirection: "column",
         overflow: "hidden",
         position: "relative",
-        /* mobile: natural height so content isn't clipped */
         height: mobile ? "100dvh" : "100vh",
         width: "100%",
       }}
     >
+      {/* Background glow */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -682,17 +672,41 @@ export default function ExperiencePage() {
         }}
       />
 
-      {/* TOP BAR */}
+      {/* TOP BAR — absolute overlay, doesn't take up flow space */}
       <div
-        className="absolute top-0 left-0 right-0 z-30 flex justify-between px-5 md:px-10 pt-5 md:pt-6"
+        className="absolute top-0 left-0 right-0 z-30 flex justify-between items-center px-5 md:px-10"
         style={{
           fontFamily: "monospace",
           fontSize: "9px",
           letterSpacing: "0.2em",
           color: "#333",
+          height: "40px",
         }}
       >
-        <span></span>
+        {/* HEADING sits inline in the top bar — compact, no wasted space */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: "16px" }}>
+          <h2
+            style={{
+              fontSize: mobile ? "15px" : "18px",
+              fontWeight: 800,
+              color: "#fff",
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+              margin: 0,
+            }}
+          >
+            Work Experience
+          </h2>
+          <span
+            style={{
+              fontSize: "9px",
+              color: "#2a2a2a",
+              letterSpacing: "0.1em",
+            }}
+          >
+            {mobile ? "TAP TO EXPAND" : "HOVER FOR DETAILS"}
+          </span>
+        </div>
         <span>[ WORK HISTORY ]</span>
       </div>
 
@@ -710,48 +724,7 @@ export default function ExperiencePage() {
         <span>{mobile ? "" : "SCROLL TO EXPLORE ↓"}</span>
       </div>
 
-      {/* HEADING */}
-      <div
-        style={{
-          flexShrink: 0,
-          position: "relative",
-          zIndex: 20,
-          paddingTop: "46px",
-          paddingBottom: "16px",
-          paddingLeft: mobile ? "20px" : "48px",
-          paddingRight: mobile ? "20px" : "48px",
-          background: "#050505",
-        }}
-      >
-        <h2
-          style={{
-            fontSize: mobile
-              ? "clamp(1.6rem,7vw,2rem)"
-              : "clamp(2rem,3.5vw,3rem)",
-            fontWeight: 800,
-            letterSpacing: "-0.03em",
-            color: "#fff",
-            lineHeight: 1,
-          }}
-        >
-          Work Experience
-        </h2>
-        <p
-          style={{
-            fontSize: "10px",
-            color: "#3f3f46",
-            marginTop: "5px",
-            fontFamily: "monospace",
-            letterSpacing: "0.08em",
-          }}
-        >
-          {mobile
-            ? "TAP AN ENTRY TO EXPAND"
-            : "HOVER AN ENTRY TO SEE FULL DETAILS"}
-        </p>
-      </div>
-
-      {/* SCROLL CONTAINER */}
+      {/* SCROLL CONTAINER — starts right from the top, offset by top bar height */}
       <div
         ref={scrollRef}
         className="no-scrollbar"
@@ -759,6 +732,7 @@ export default function ExperiencePage() {
           flex: 1,
           overflowY: "scroll",
           overflowX: "hidden",
+          paddingTop: "48px" /* clears the top bar */,
           paddingLeft: mobile ? "16px" : "48px",
           paddingRight: mobile ? "16px" : "48px",
           paddingBottom: "80px",
@@ -767,13 +741,12 @@ export default function ExperiencePage() {
         }}
       >
         {mobile ? (
-          /* ── MOBILE: accordion stack ── */
           <div
             style={{
               display: "flex",
               flexDirection: "column",
               gap: "10px",
-              paddingTop: "8px",
+              paddingTop: "4px",
               paddingBottom: "40px",
             }}
           >
@@ -782,13 +755,12 @@ export default function ExperiencePage() {
             ))}
           </div>
         ) : (
-          /* ── DESKTOP: timeline ── */
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "90px",
-              paddingTop: "20px",
+              gap: "48px",
+              paddingTop: "4px",
               paddingBottom: "40px",
               position: "relative",
             }}
@@ -900,32 +872,6 @@ export default function ExperiencePage() {
           </div>
         )}
       </div>
-
-      {/* Scroll nudge — desktop only */}
-      {!mobile && (
-        <AnimatePresence>
-          {atBottom && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 6 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              style={{
-                position: "absolute",
-                bottom: "28px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 40,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: "6px",
-                pointerEvents: "none",
-              }}
-            ></motion.div>
-          )}
-        </AnimatePresence>
-      )}
     </section>
   );
 }
