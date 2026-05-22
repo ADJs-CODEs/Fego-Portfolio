@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import characterImg from "./assets/VA-character.png";
+import characterImg from "../assets/VA-characters.png";
 
 function useBreakpoint() {
   const get = () => {
